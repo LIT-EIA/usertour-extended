@@ -3,7 +3,7 @@ name: Minify JS and Generate Bookmarklets
 on:
   push:
     paths:
-      - 'src/**/*.js'
+      - 'src/**/**/*.js'
 
 jobs:
   build:
