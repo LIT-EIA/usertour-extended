@@ -24,7 +24,7 @@ jobs:
       - name: Minify JS files
         run: |
           mkdir -p dist
-          for file in src/*.js; do
+          for file in src/*/*.js; do
             filename=$(basename "$file")
             terser "$file" -o "dist/$filename" -c -m
           done

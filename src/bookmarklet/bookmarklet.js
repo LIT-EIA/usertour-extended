@@ -3,6 +3,7 @@
   if (document.querySelector('.custom-modal-overlay')) {
     return;
   }
+  
   // Persistent data
   function loadStorage() {
     var local = localStorage.getItem("ut-configurator");
