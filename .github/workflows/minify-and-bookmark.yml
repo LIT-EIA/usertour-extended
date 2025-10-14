@@ -3,7 +3,7 @@ name: Minify JS and Generate Bookmarklets
 on:
   push:
     paths:
-      - "src/**/**/*.js"
+      - 'src/**/**/*.js'
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Install Terser
         run: npm install terser -g
@@ -32,7 +32,7 @@ jobs:
       - name: Generate Bookmarklets
         run: |
           mkdir -p bookmarklets
-          for file in dist/bookmarklet.min.js; do
+          for file in dist/bookmarklet.js; do
             filename=$(basename "$file" .js)
             minified=$(cat "$file")
             bookmarklet="javascript:(function(){${minified}})();"
