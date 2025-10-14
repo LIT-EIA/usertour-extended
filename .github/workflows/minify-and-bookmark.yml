@@ -1,0 +1,50 @@
+name: Minify JS and Generate Bookmarklets
+
+on:
+  push:
+    paths:
+      - 'src/**/*.js'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Terser
+        run: npm install terser -g
+
+      - name: Minify JS files
+        run: |
+          mkdir -p dist
+          for file in src/*.js; do
+            filename=$(basename "$file")
+            terser "$file" -o "dist/$filename" -c -m
+          done
+
+      - name: Generate Bookmarklets
+        run: |
+          mkdir -p bookmarklets
+          for file in dist/*.js; do
+            filename=$(basename "$file" .js)
+            minified=$(cat "$file")
+            bookmarklet="javascript:(function(){${minified}})();"
+            echo "$bookmarklet" > "bookmarklets/${filename}.txt"
+          done
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add dist/ bookmarklets/
+          git diff --cached --quiet || git commit -m "Minify JS and generate bookmarklets"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

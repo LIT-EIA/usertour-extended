@@ -1,0 +1,446 @@
+(function () {
+  // Only open once
+  if (document.querySelector('.custom-modal-overlay')) {
+    return;
+  }
+
+  // Persistent data
+  function loadStorage() {
+    var local = localStorage.getItem("ut-configurator");
+    var storage = JSON.parse(local) || {};
+    return storage;
+  }
+
+  function loadStorageProp(prop) {
+    var local = localStorage.getItem("ut-configurator");
+    var storage = JSON.parse(local) || {};
+    return storage && storage[prop] ? storage[prop] : null;
+  }
+
+  function saveToStorage(prop, value) {
+    var storage = loadStorage();
+    storage[prop] = value;
+    localStorage.setItem("ut-configurator", JSON.stringify(storage));
+  }
+
+  // Load Font Awesome
+  const faLink = document.createElement('link');
+  faLink.rel = 'stylesheet';
+  faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+  document.head.appendChild(faLink);
+
+  // Inject styles
+  const style = document.createElement('style');
+  style.textContent = `
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2147483647;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .custom-modal {
+      position: relative;
+      background: #f9f9f9;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      width: 320px;
+      max-width: 90%;
+      padding: 20px;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      animation: slideUp 0.4s ease-out;
+    }
+
+    .custom-modal h2 {
+      margin-top: 0;
+      font-size: 1.3em;
+      margin-bottom: 14px;
+      color: #222;
+    }
+
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .close-button:hover {
+      color: #000;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .button-grid .custom-button {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      font-size: 0.75em;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .button-grid .custom-button i {
+      font-size: 1.2em;
+      margin-bottom: 4px;
+    }
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 10px 0 16px;
+      padding: 6px 0;
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .toggle-label {
+      font-size: 0.9em;
+      color: #444;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0;
+      right: 0; bottom: 0;
+      background-color: #bbb;
+      transition: 0.2s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #4a90e2;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .button-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .custom-button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background: #e0e0e0;
+      color: #333;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .custom-button:hover {
+      background: #d5d5d5;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Create modal
+  const overlay = document.createElement('div');
+  overlay.className = 'custom-modal-overlay';
+
+  const modal = document.createElement('div');
+  modal.className = 'custom-modal';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'close-button';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.setAttribute('aria-label', 'Close modal');
+  closeBtn.onclick = () => overlay.remove();
+
+  modal.innerHTML = `
+    <h2>Usertour Options</h2>
+    <div class="button-grid">
+      <button class="custom-button" aria-label="Select an element">
+        <i class="fa fa-mouse-pointer"></i>
+        <span>Select</span>
+      </button>
+      <button class="custom-button">2</button>
+      <button class="custom-button">3</button>
+      <button class="custom-button">4</button>
+      <button class="custom-button">5</button>
+      <button class="custom-button">6</button>
+      <button class="custom-button">7</button>
+      <button class="custom-button">8</button>
+    </div>
+
+    <div class="toggle-container">
+      <span class="toggle-label">Test Mode</span>
+      <label class="switch">
+        <input type="checkbox" id="testModeToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="button-list">
+      <button class="custom-button">Option A</button>
+      <button class="custom-button">Option B</button>
+      <button class="custom-button">Option C</button>
+    </div>
+  `;
+
+  modal.prepend(closeBtn);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Utility functions
+  function attachCloseAction(button) {
+    button.addEventListener('click', () => overlay.remove());
+  }
+
+  function attachButtonAction(button, action) {
+    button.addEventListener('click', action);
+  }
+
+  // Select button: close + custom action
+  const selectButton = modal.querySelector('.button-grid .custom-button');
+  attachCloseAction(selectButton);
+  attachButtonAction(selectButton, () => {
+    function inject(doc) {
+      // Add crosshair cursor style
+      const style = doc.createElement("style");
+      style.textContent = `* { cursor: crosshair !important }`;
+      style.setAttribute("data-selector-style", "");
+      doc.head.appendChild(style);
+
+      // Ensure cursor stays crosshair even if overridden
+      const observer = new MutationObserver(() => {
+        doc.body.style.setProperty("cursor", "crosshair", "important");
+      });
+      observer.observe(doc.body, { attributes: true, attributeFilter: ["style"] });
+      doc._selectorObserver = observer;
+
+      let lastHovered = null;
+
+      // Highlight hovered element
+      function hoverIn(e) {
+        if (lastHovered) {
+          lastHovered.removeAttribute("data-selector-shadow");
+          lastHovered.style.boxShadow = "";
+        }
+        lastHovered = e.target;
+        lastHovered.setAttribute("data-selector-shadow", "");
+
+        // Special styling for iframes
+        if (doc === document && lastHovered.tagName.toLowerCase() === "iframe") {
+          lastHovered.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
+          try {
+            lastHovered.contentDocument.documentElement.style.boxShadow = "";
+          } catch { }
+        } else {
+          lastHovered.style.boxShadow = "0 0 0 2px rgba(0,123,255,0.75), inset 0 0 0 9999px rgba(0,123,255,0.15)";
+        }
+      }
+
+      // Remove highlight on mouse out
+      function hoverOut(e) {
+        if (e.target === lastHovered) {
+          e.target.removeAttribute("data-selector-shadow");
+          e.target.style.boxShadow = "";
+        }
+      }
+
+      // Generate CSS selector path
+      function getSelector(el) {
+        let path = [];
+        while (el && el.nodeType === 1 && el.tagName.toLowerCase() !== "html") {
+          let tag = el.tagName.toLowerCase();
+          let cls = tag !== "body" && el.className
+            ? "." + el.className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
+            : "";
+          let siblings = Array.from(el.parentNode?.children || []);
+          let sameTagSiblings = siblings.filter(sib => sib.tagName === el.tagName);
+          let selector = `${tag}${cls}`;
+          if (sameTagSiblings.length > 1 || cls === "") {
+            selector += `:nth-child(${siblings.indexOf(el) + 1})`;
+          }
+          path.unshift(selector);
+          el = el.parentElement;
+        }
+        return path.join(" > ");
+      }
+
+      // Show toast notification
+      function showToast(el) {
+        const toast = doc.createElement("div");
+        toast.textContent = "✔ Selector copied";
+        Object.assign(toast.style, {
+          position: "absolute",
+          background: "rgba(0,0,0,0.85)",
+          color: "white",
+          padding: "6px 12px",
+          borderRadius: "6px",
+          fontSize: "14px",
+          fontWeight: "bold",
+          pointerEvents: "none",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+          transition: "opacity 0.4s ease",
+          opacity: "0",
+          zIndex: "2147483647"
+        });
+        doc.body.appendChild(toast);
+
+        const rect = el.getBoundingClientRect();
+        const vw = doc.defaultView.innerWidth;
+        const vh = doc.defaultView.innerHeight;
+        const margin = 8;
+        let x = rect.left + doc.defaultView.scrollX;
+        let y = rect.top + doc.defaultView.scrollY;
+
+        const space = {
+          right: vw - rect.right,
+          left: rect.left,
+          top: rect.top,
+          bottom: vh - rect.bottom
+        };
+
+        // Position toast based on available space
+        if (space.right > toast.offsetWidth + margin) {
+          x = rect.right + doc.defaultView.scrollX + margin;
+          y += rect.height / 2 - toast.offsetHeight / 2;
+        } else if (space.left > toast.offsetWidth + margin) {
+          x = rect.left + doc.defaultView.scrollX - toast.offsetWidth - margin;
+          y += rect.height / 2 - toast.offsetHeight / 2;
+        } else if (space.top > toast.offsetHeight + margin) {
+          x += rect.width / 2 - toast.offsetWidth / 2;
+          y = rect.top + doc.defaultView.scrollY - toast.offsetHeight - margin;
+        } else {
+          x += rect.width / 2 - toast.offsetWidth / 2;
+          y = rect.bottom + doc.defaultView.scrollY + margin;
+        }
+
+        toast.style.left = x + "px";
+        toast.style.top = y + "px";
+        requestAnimationFrame(() => toast.style.opacity = "1");
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 400);
+        }, 1500);
+      }
+
+      // Cleanup function
+      function destroy(doc) {
+        try {
+          doc.body.style.cursor = "";
+          doc.querySelectorAll("style[data-selector-style]").forEach(s => s.remove());
+          doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
+          doc.removeEventListener("click", handleClick, true);
+          doc.removeEventListener("mouseover", hoverIn);
+          doc.removeEventListener("mouseout", hoverOut);
+          if (doc._selectorObserver) {
+            doc._selectorObserver.disconnect();
+            delete doc._selectorObserver;
+          }
+        } catch (e) {
+          console.warn("Cleanup failed:", e);
+        }
+      }
+
+      // Handle click to copy selector
+      function handleClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let selector = getSelector(e.target);
+        navigator.clipboard.writeText(selector).then(() => showToast(e.target));
+        window.top.postMessage("__selector_cleanup__", "*");
+      }
+
+      // Attach event listeners
+      doc.addEventListener("mouseover", hoverIn);
+      doc.addEventListener("mouseout", hoverOut);
+      doc.addEventListener("click", handleClick, true);
+      window.addEventListener("message", e => {
+        if (e.data === "__selector_cleanup__") destroy(doc);
+      });
+    }
+
+    // Inject into main document
+    inject(document);
+
+    // Inject into all iframes
+    Array.from(document.querySelectorAll("iframe")).forEach(f => {
+      try {
+        inject(f.contentDocument || f.contentWindow.document);
+        f.contentDocument.documentElement.addEventListener("mouseover", () => {
+          f.style.boxShadow = "";
+          f.contentDocument.documentElement.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
+        });
+        f.contentDocument.documentElement.addEventListener("mouseout", () => {
+          f.contentDocument.documentElement.style.boxShadow = "";
+        });
+      } catch (e) {
+        console.warn("Cross-origin iframe skipped");
+      }
+    });
+  });
+
+  // Toggle listener
+  const testToggle = modal.querySelector('#testModeToggle');
+  testToggle.checked = loadStorageProp("testMode") || false;
+  testToggle.addEventListener('change', (e) => {
+    const isChecked = e.target.checked;
+    saveToStorage("testMode", isChecked);
+    usertour.enableUserTour();
+  });
+
+  // Option buttons example
+  const optionButtons = modal.querySelectorAll('.button-list .custom-button');
+  attachButtonAction(optionButtons[0], () => console.log('Option A clicked'));
+  attachButtonAction(optionButtons[1], () => console.log('Option B clicked'));
+  attachButtonAction(optionButtons[2], () => console.log('Option C clicked'));
+})();
