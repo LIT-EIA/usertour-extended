@@ -1,5 +1,5 @@
 (function () {
-  
+
   // Only open once
   if (document.querySelector('.custom-modal-overlay')) {
     return;
@@ -245,7 +245,10 @@
   }
 
   function attachButtonAction(button, action) {
-    button.addEventListener('click', action);
+    button.addEventListener('click', function(e){
+      e.stopPropagation();
+      action();
+    });
   }
 
   // Select button: close + custom action
