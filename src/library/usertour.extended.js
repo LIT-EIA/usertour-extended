@@ -1,6 +1,5 @@
 (() => {
   const STORAGE_KEY = 'ut-configurator';
-  
   const loadStorageProp = (prop) => {
     const local = localStorage.getItem(STORAGE_KEY);
     const storage = JSON.parse(local) || {};
