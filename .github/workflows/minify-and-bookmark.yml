@@ -32,7 +32,7 @@ jobs:
       - name: Generate Bookmarklets
         run: |
           mkdir -p bookmarklets
-          for file in dist/bookmarklet.js; do
+          for file in dist/bookmarklet.min.js; do
             filename=$(basename "$file" .js)
             minified=$(cat "$file")
             bookmarklet="javascript:(function(){${minified}})();"

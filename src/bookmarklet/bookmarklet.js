@@ -1,4 +1,5 @@
 (function () {
+  
   // Only open once
   if (document.querySelector('.custom-modal-overlay')) {
     return;
