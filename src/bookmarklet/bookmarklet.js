@@ -2,6 +2,7 @@
   // test
   // Only open once
   if (document.querySelector('.custom-modal-overlay')) {
+    console.log('already there!')
     return;
   }
   
