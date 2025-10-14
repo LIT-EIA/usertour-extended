@@ -36,7 +36,7 @@ jobs:
             filename=$(basename "$file" .js)
             minified=$(cat "$file")
             bookmarklet="javascript:(function(){${minified}})();"
-            echo "$bookmarklet" > "bookmarklets/${basename}.txt"
+            echo "$bookmarklet" > "bookmarklets/${file}.txt"
           done
 
       - name: Commit and Push Changes
