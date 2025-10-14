@@ -7,7 +7,7 @@
     return storage && storage[prop] ? storage[prop] : null;
   };
 
-  const enableTestMode = () => {
+  const enableTestMode = () => { 
     const testMode = loadStorageProp('testMode');
 
     const existingBanner = document.querySelector('.vertical-banner');
