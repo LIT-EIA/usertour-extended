@@ -4,7 +4,7 @@
   if (document.querySelector('.custom-modal-overlay')) {
     return;
   }
-  
+
   // Persistent data
   function loadStorage() {
     var local = localStorage.getItem("ut-configurator");
@@ -188,6 +188,66 @@
       from { transform: translateY(40px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
+
+    .selector-field-container {
+      margin-bottom: 16px;
+    }
+
+    .selector-field-label {
+      font-size: 0.85em;
+      color: #555;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .selector-field-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .selector-field {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.85em;
+      font-family: 'Courier New', monospace;
+      background: white;
+      color: #333;
+    }
+
+    .selector-field:read-only {
+      cursor: text;
+      background: #f5f5f5;
+    }
+
+    .copy-button {
+      flex-shrink: 0;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background: #e0e0e0;
+      color: #333;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 90px;
+      justify-content: center;
+    }
+
+    .copy-button:hover {
+      background: #d5d5d5;
+    }
+
+    .copy-button i {
+      font-size: 1em;
+    }
   `;
   document.head.appendChild(style);
 
@@ -207,14 +267,20 @@
   modal.innerHTML = `
     <h2>Usertour Options</h2>
     <div class="button-grid">
-      <button class="custom-button" aria-label="Select an element">
+      <button class="custom-button select" aria-label="Select an element">
         <i class="fa fa-mouse-pointer"></i>
         <span>Select</span>
       </button>
       <button class="custom-button">2</button>
       <button class="custom-button">3</button>
       <button class="custom-button">4</button>
-      <button class="custom-button">5</button>
+    </div>
+    <p>Non-unique platforms</p>
+    <div class="button-grid">
+        <button class="custom-button select-main-only" aria-label="Select an element">
+        <i class="fa fa-mouse-pointer"></i>
+        <span>Select</span>
+      </button>
       <button class="custom-button">6</button>
       <button class="custom-button">7</button>
       <button class="custom-button">8</button>
@@ -245,14 +311,128 @@
   }
 
   function attachButtonAction(button, action) {
-    button.addEventListener('click', function(e){
+    button.addEventListener('click', function (e) {
       e.stopPropagation();
       action();
     });
   }
 
+  // Function to show selector modal
+  function showSelectorModal(selector, elementText) {
+    // Remove any existing selector modal
+    const existingModal = document.querySelector('.selector-modal-overlay');
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // Create modal overlay
+    const selectorOverlay = document.createElement('div');
+    selectorOverlay.className = 'custom-modal-overlay selector-modal-overlay';
+
+    // Create modal
+    const selectorModal = document.createElement('div');
+    selectorModal.className = 'custom-modal';
+
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-button';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.setAttribute('aria-label', 'Close modal');
+    closeBtn.onclick = () => selectorOverlay.remove();
+
+    // Create selector field container
+    const selectorContainer = document.createElement('div');
+    selectorContainer.className = 'selector-field-container';
+    
+    const selectorLabel = document.createElement('label');
+    selectorLabel.className = 'selector-field-label';
+    selectorLabel.textContent = 'CSS selector';
+    
+    const selectorWrapper = document.createElement('div');
+    selectorWrapper.className = 'selector-field-wrapper';
+    
+    const selectorInput = document.createElement('input');
+    selectorInput.type = 'text';
+    selectorInput.className = 'selector-field';
+    selectorInput.value = selector;
+    selectorInput.readOnly = true;
+    
+    const selectorCopyBtn = document.createElement('button');
+    selectorCopyBtn.className = 'copy-button';
+    const selectorIcon = document.createElement('i');
+    selectorIcon.className = 'fa fa-clone';
+    const selectorText = document.createElement('span');
+    selectorText.textContent = 'Copy';
+    selectorCopyBtn.appendChild(selectorIcon);
+    selectorCopyBtn.appendChild(selectorText);
+    selectorCopyBtn.onclick = () => {
+      navigator.clipboard.writeText(selector).then(() => {
+        selectorText.textContent = 'Copied';
+        setTimeout(() => {
+          selectorText.textContent = 'Copy';
+        }, 2000);
+      });
+    };
+    
+    selectorWrapper.appendChild(selectorInput);
+    selectorWrapper.appendChild(selectorCopyBtn);
+    selectorContainer.appendChild(selectorLabel);
+    selectorContainer.appendChild(selectorWrapper);
+
+    // Create text field container
+    const textContainer = document.createElement('div');
+    textContainer.className = 'selector-field-container';
+    
+    const textLabel = document.createElement('label');
+    textLabel.className = 'selector-field-label';
+    textLabel.textContent = 'Element text';
+    
+    const textWrapper = document.createElement('div');
+    textWrapper.className = 'selector-field-wrapper';
+    
+    const textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.className = 'selector-field';
+    textInput.value = elementText || '';
+    textInput.readOnly = true;
+    
+    const textCopyBtn = document.createElement('button');
+    textCopyBtn.className = 'copy-button';
+    const textIcon = document.createElement('i');
+    textIcon.className = 'fa fa-clone';
+    const textCopyText = document.createElement('span');
+    textCopyText.textContent = 'Copy';
+    textCopyBtn.appendChild(textIcon);
+    textCopyBtn.appendChild(textCopyText);
+    textCopyBtn.onclick = () => {
+      navigator.clipboard.writeText(elementText || '').then(() => {
+        textCopyText.textContent = 'Copied';
+        setTimeout(() => {
+          textCopyText.textContent = 'Copy';
+        }, 2000);
+      });
+    };
+    
+    textWrapper.appendChild(textInput);
+    textWrapper.appendChild(textCopyBtn);
+    textContainer.appendChild(textLabel);
+    textContainer.appendChild(textWrapper);
+
+    // Build modal
+    const modalTitle = document.createElement('h2');
+    modalTitle.textContent = 'Selector Details';
+    
+    selectorModal.appendChild(closeBtn);
+    selectorModal.appendChild(modalTitle);
+    selectorModal.appendChild(textContainer);
+    selectorModal.appendChild(selectorContainer);
+    
+    selectorOverlay.appendChild(selectorModal);
+    document.body.appendChild(selectorOverlay);
+  }
+
   // Select button: close + custom action
-  const selectButton = modal.querySelector('.button-grid .custom-button');
+  const selectButton = modal.querySelector('.button-grid .custom-button.select');
   attachCloseAction(selectButton);
   attachButtonAction(selectButton, () => {
     function inject(doc) {
@@ -319,62 +499,181 @@
         return path.join(" > ");
       }
 
-      // Show toast notification
-      function showToast(el) {
-        const toast = doc.createElement("div");
-        toast.textContent = "✔ Selector copied";
-        Object.assign(toast.style, {
-          position: "absolute",
-          background: "rgba(0,0,0,0.85)",
-          color: "white",
-          padding: "6px 12px",
-          borderRadius: "6px",
-          fontSize: "14px",
-          fontWeight: "bold",
-          pointerEvents: "none",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-          transition: "opacity 0.4s ease",
-          opacity: "0",
-          zIndex: "2147483647"
-        });
-        doc.body.appendChild(toast);
+      // Cleanup function
+      function destroy(doc) {
+        try {
+          doc.body.style.cursor = "";
+          doc.querySelectorAll("style[data-selector-style]").forEach(s => s.remove());
+          doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
+          doc.removeEventListener("click", handleClick, true);
+          doc.removeEventListener("mouseover", hoverIn);
+          doc.removeEventListener("mouseout", hoverOut);
+          if (doc._selectorObserver) {
+            doc._selectorObserver.disconnect();
+            delete doc._selectorObserver;
+          }
+          // Clear iframe highlights in main document
+          if (doc === document) {
+            Array.from(document.querySelectorAll("iframe")).forEach(f => {
+              f.style.boxShadow = "";
+              try {
+                if (f.contentDocument && f.contentDocument.documentElement) {
+                  f.contentDocument.documentElement.style.boxShadow = "";
+                }
+              } catch (e) {
+                // Cross-origin iframe, ignore
+              }
+            });
+          }
+        } catch (e) {
+          console.warn("Cleanup failed:", e);
+        }
+      }
 
-        const rect = el.getBoundingClientRect();
-        const vw = doc.defaultView.innerWidth;
-        const vh = doc.defaultView.innerHeight;
-        const margin = 8;
-        let x = rect.left + doc.defaultView.scrollX;
-        let y = rect.top + doc.defaultView.scrollY;
+      // Handle click to show selector modal
+      function handleClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let selector = getSelector(e.target);
+        let elementText = e.target.innerText || e.target.textContent || '';
+        // Clean up selector mode first
+        window.top.postMessage("__selector_cleanup__", "*");
+        // Show modal with selector and text
+        showSelectorModal(selector, elementText);
+      }
 
-        const space = {
-          right: vw - rect.right,
-          left: rect.left,
-          top: rect.top,
-          bottom: vh - rect.bottom
+      // Attach event listeners
+      doc.addEventListener("mouseover", hoverIn);
+      doc.addEventListener("mouseout", hoverOut);
+      doc.addEventListener("click", handleClick, true);
+      window.addEventListener("message", e => {
+        if (e.data === "__selector_cleanup__") destroy(doc);
+      });
+    }
+
+    // Inject into main document
+    inject(document);
+
+    // Track iframe event listeners for cleanup
+    const iframeHandlers = [];
+
+    // Inject into all iframes
+    Array.from(document.querySelectorAll("iframe")).forEach(f => {
+      try {
+        inject(f.contentDocument || f.contentWindow.document);
+        
+        const iframeMouseOver = () => {
+          f.style.boxShadow = "";
+          f.contentDocument.documentElement.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
         };
+        
+        const iframeMouseOut = () => {
+          f.contentDocument.documentElement.style.boxShadow = "";
+        };
+        
+        f.contentDocument.documentElement.addEventListener("mouseover", iframeMouseOver);
+        f.contentDocument.documentElement.addEventListener("mouseout", iframeMouseOut);
+        
+        // Store handlers for cleanup
+        iframeHandlers.push({
+          iframe: f,
+          mouseover: iframeMouseOver,
+          mouseout: iframeMouseOut,
+          documentElement: f.contentDocument.documentElement
+        });
+      } catch (e) {
+        console.warn("Cross-origin iframe skipped");
+      }
+    });
 
-        // Position toast based on available space
-        if (space.right > toast.offsetWidth + margin) {
-          x = rect.right + doc.defaultView.scrollX + margin;
-          y += rect.height / 2 - toast.offsetHeight / 2;
-        } else if (space.left > toast.offsetWidth + margin) {
-          x = rect.left + doc.defaultView.scrollX - toast.offsetWidth - margin;
-          y += rect.height / 2 - toast.offsetHeight / 2;
-        } else if (space.top > toast.offsetHeight + margin) {
-          x += rect.width / 2 - toast.offsetWidth / 2;
-          y = rect.top + doc.defaultView.scrollY - toast.offsetHeight - margin;
+    // Cleanup iframe handlers when cleanup message is received
+    const cleanupHandler = (e) => {
+      if (e.data === "__selector_cleanup__") {
+        iframeHandlers.forEach(handler => {
+          try {
+            handler.iframe.style.boxShadow = "";
+            handler.documentElement.style.boxShadow = "";
+            handler.documentElement.removeEventListener("mouseover", handler.mouseover);
+            handler.documentElement.removeEventListener("mouseout", handler.mouseout);
+          } catch (err) {
+            // Ignore errors (e.g., iframe removed or cross-origin)
+          }
+        });
+      }
+    };
+    
+    window.addEventListener("message", cleanupHandler);
+  });
+
+  const selectButtonMainOnly = modal.querySelector('.button-grid .custom-button.select-main-only');
+  attachCloseAction(selectButtonMainOnly);
+  attachButtonAction(selectButtonMainOnly, () => {
+    function inject(doc) {
+      // Add crosshair cursor style
+      const style = doc.createElement("style");
+      style.textContent = `* { cursor: crosshair !important }`;
+      style.setAttribute("data-selector-style", "");
+      doc.head.appendChild(style);
+
+      // Ensure cursor stays crosshair even if overridden
+      const observer = new MutationObserver(() => {
+        doc.body.style.setProperty("cursor", "crosshair", "important");
+      });
+      observer.observe(doc.body, { attributes: true, attributeFilter: ["style"] });
+      doc._selectorObserver = observer;
+
+      let lastHovered = null;
+
+      // Highlight hovered element
+      function hoverIn(e) {
+        if (lastHovered) {
+          lastHovered.removeAttribute("data-selector-shadow");
+          lastHovered.style.boxShadow = "";
+        }
+        lastHovered = e.target;
+        lastHovered.setAttribute("data-selector-shadow", "");
+
+        // Special styling for iframes
+        if (doc === document && lastHovered.tagName.toLowerCase() === "iframe") {
+          lastHovered.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
+          try {
+            lastHovered.contentDocument.documentElement.style.boxShadow = "";
+          } catch { }
         } else {
-          x += rect.width / 2 - toast.offsetWidth / 2;
-          y = rect.bottom + doc.defaultView.scrollY + margin;
+          lastHovered.style.boxShadow = "0 0 0 2px rgba(0,123,255,0.75), inset 0 0 0 9999px rgba(0,123,255,0.15)";
+        }
+      }
+
+      // Remove highlight on mouse out
+      function hoverOut(e) {
+        if (e.target === lastHovered) {
+          e.target.removeAttribute("data-selector-shadow");
+          e.target.style.boxShadow = "";
+        }
+      }
+
+      // Generate CSS selector path
+      function getSelector(el) {
+        if (!el || el.nodeType !== 1) return "";
+
+        let tag = el.tagName.toLowerCase();
+        let cls = el.className
+          ? "." + el.className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
+          : "";
+
+        // Build the base selector
+        let selector = `${tag}${cls}`;
+
+        // If multiple siblings share the same tag/class combination, add :nth-child
+        if (el.parentNode) {
+          let siblings = Array.from(el.parentNode.children);
+          let sameTagSiblings = siblings.filter(sib => sib.tagName === el.tagName);
+          if (sameTagSiblings.length > 1 || cls === "") {
+            selector += `:nth-child(${siblings.indexOf(el) + 1})`;
+          }
         }
 
-        toast.style.left = x + "px";
-        toast.style.top = y + "px";
-        requestAnimationFrame(() => toast.style.opacity = "1");
-        setTimeout(() => {
-          toast.style.opacity = "0";
-          setTimeout(() => toast.remove(), 400);
-        }, 1500);
+        return selector;
       }
 
       // Cleanup function
@@ -390,18 +689,34 @@
             doc._selectorObserver.disconnect();
             delete doc._selectorObserver;
           }
+          // Clear iframe highlights in main document
+          if (doc === document) {
+            Array.from(document.querySelectorAll("iframe")).forEach(f => {
+              f.style.boxShadow = "";
+              try {
+                if (f.contentDocument && f.contentDocument.documentElement) {
+                  f.contentDocument.documentElement.style.boxShadow = "";
+                }
+              } catch (e) {
+                // Cross-origin iframe, ignore
+              }
+            });
+          }
         } catch (e) {
           console.warn("Cleanup failed:", e);
         }
       }
 
-      // Handle click to copy selector
+      // Handle click to show selector modal
       function handleClick(e) {
         e.preventDefault();
         e.stopPropagation();
         let selector = getSelector(e.target);
-        navigator.clipboard.writeText(selector).then(() => showToast(e.target));
+        let elementText = e.target.innerText || e.target.textContent || '';
+        // Clean up selector mode first
         window.top.postMessage("__selector_cleanup__", "*");
+        // Show modal with selector and text
+        showSelectorModal(selector, elementText);
       }
 
       // Attach event listeners
@@ -416,21 +731,55 @@
     // Inject into main document
     inject(document);
 
+    // Track iframe event listeners for cleanup
+    const iframeHandlers = [];
+
     // Inject into all iframes
     Array.from(document.querySelectorAll("iframe")).forEach(f => {
       try {
         inject(f.contentDocument || f.contentWindow.document);
-        f.contentDocument.documentElement.addEventListener("mouseover", () => {
+        
+        const iframeMouseOver = () => {
           f.style.boxShadow = "";
           f.contentDocument.documentElement.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
-        });
-        f.contentDocument.documentElement.addEventListener("mouseout", () => {
+        };
+        
+        const iframeMouseOut = () => {
           f.contentDocument.documentElement.style.boxShadow = "";
+        };
+        
+        f.contentDocument.documentElement.addEventListener("mouseover", iframeMouseOver);
+        f.contentDocument.documentElement.addEventListener("mouseout", iframeMouseOut);
+        
+        // Store handlers for cleanup
+        iframeHandlers.push({
+          iframe: f,
+          mouseover: iframeMouseOver,
+          mouseout: iframeMouseOut,
+          documentElement: f.contentDocument.documentElement
         });
       } catch (e) {
         console.warn("Cross-origin iframe skipped");
       }
     });
+
+    // Cleanup iframe handlers when cleanup message is received
+    const cleanupHandler = (e) => {
+      if (e.data === "__selector_cleanup__") {
+        iframeHandlers.forEach(handler => {
+          try {
+            handler.iframe.style.boxShadow = "";
+            handler.documentElement.style.boxShadow = "";
+            handler.documentElement.removeEventListener("mouseover", handler.mouseover);
+            handler.documentElement.removeEventListener("mouseout", handler.mouseout);
+          } catch (err) {
+            // Ignore errors (e.g., iframe removed or cross-origin)
+          }
+        });
+      }
+    };
+    
+    window.addEventListener("message", cleanupHandler);
   });
 
   // Toggle listener
