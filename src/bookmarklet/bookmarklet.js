@@ -459,6 +459,11 @@
         }
         lastHovered = e.target;
         lastHovered.setAttribute("data-selector-shadow", "");
+        
+        // Capture original className before any hover classes are added
+        if (!lastHovered.hasAttribute("data-original-class")) {
+          lastHovered.setAttribute("data-original-class", lastHovered.className || "");
+        }
 
         // Special styling for iframes
         if (doc === document && lastHovered.tagName.toLowerCase() === "iframe") {
@@ -519,8 +524,11 @@
         let path = [];
         while (el && el.nodeType === 1 && el.tagName.toLowerCase() !== "html") {
           let tag = el.tagName.toLowerCase();
-          let cls = tag !== "body" && el.className
-            ? "." + el.className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
+          // Use original className if available (captured before hover classes), otherwise current className
+          const originalClass = el.getAttribute("data-original-class");
+          const className = originalClass !== null ? originalClass : (el.className || "");
+          let cls = tag !== "body" && className
+            ? "." + className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
             : "";
           let siblings = Array.from(el.parentNode?.children || []);
           let sameTagSiblings = siblings.filter(sib => sib.tagName === el.tagName);
@@ -540,6 +548,7 @@
           doc.body.style.cursor = "";
           doc.querySelectorAll("style[data-selector-style]").forEach(s => s.remove());
           doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
+          doc.querySelectorAll("[data-original-class]").forEach(el => el.removeAttribute("data-original-class"));
           doc.removeEventListener("click", handleClick, true);
           doc.removeEventListener("mouseover", hoverIn);
           doc.removeEventListener("mouseout", hoverOut);
@@ -667,6 +676,11 @@
         }
         lastHovered = e.target;
         lastHovered.setAttribute("data-selector-shadow", "");
+        
+        // Capture original className before any hover classes are added
+        if (!lastHovered.hasAttribute("data-original-class")) {
+          lastHovered.setAttribute("data-original-class", lastHovered.className || "");
+        }
 
         // Special styling for iframes
         if (doc === document && lastHovered.tagName.toLowerCase() === "iframe") {
@@ -728,8 +742,11 @@
         if (!el || el.nodeType !== 1) return "";
 
         let tag = el.tagName.toLowerCase();
-        let cls = el.className
-          ? "." + el.className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
+        // Use original className if available (captured before hover classes), otherwise current className
+        const originalClass = el.getAttribute("data-original-class");
+        const className = originalClass !== null ? originalClass : (el.className || "");
+        let cls = className
+          ? "." + className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
           : "";
 
         // Build the base selector
@@ -744,6 +761,7 @@
           doc.body.style.cursor = "";
           doc.querySelectorAll("style[data-selector-style]").forEach(s => s.remove());
           doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
+          doc.querySelectorAll("[data-original-class]").forEach(el => el.removeAttribute("data-original-class"));
           doc.removeEventListener("click", handleClick, true);
           doc.removeEventListener("mouseover", hoverIn);
           doc.removeEventListener("mouseout", hoverOut);
