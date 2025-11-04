@@ -474,6 +474,9 @@
       doc._classObserver = classObserver;
 
       let lastHovered = null;
+      let mouseDownTime = null;
+      let mouseDownTarget = null;
+      const CLICK_DURATION_THRESHOLD = 300; // milliseconds
 
       // Capture className on mouseenter (fires before mouseover and before hover states)
       function captureOriginalClass(e) {
@@ -481,6 +484,38 @@
         if (el && el.nodeType === 1 && !el.hasAttribute("data-original-class")) {
           el.setAttribute("data-original-class", el.className || "");
         }
+      }
+
+      // Track mousedown to detect click duration
+      function handleMouseDown(e) {
+        mouseDownTime = Date.now();
+        mouseDownTarget = e.target;
+      }
+
+      // Track mouseup and determine if it's a short click
+      function handleMouseUp(e) {
+        if (mouseDownTime === null) return;
+        
+        const clickDuration = Date.now() - mouseDownTime;
+        const isShortClick = clickDuration < CLICK_DURATION_THRESHOLD;
+        const isSameTarget = mouseDownTarget === e.target;
+        
+        // Reset tracking
+        mouseDownTime = null;
+        mouseDownTarget = null;
+        
+        // Only process selector for short clicks on the same target
+        if (isShortClick && isSameTarget) {
+          e.preventDefault();
+          e.stopPropagation();
+          let selector = getSelector(e.target);
+          let elementText = getElementText(e.target);
+          // Clean up selector mode first
+          window.top.postMessage("__selector_cleanup__", "*");
+          // Show modal with selector and text
+          showSelectorModal(selector, elementText);
+        }
+        // For long clicks, let the event propagate normally (don't prevent default)
       }
 
       // Highlight hovered element
@@ -582,7 +617,8 @@
           doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
           doc.querySelectorAll("[data-original-class]").forEach(el => el.removeAttribute("data-original-class"));
           doc.removeEventListener("mouseenter", captureOriginalClass, true);
-          doc.removeEventListener("click", handleClick, true);
+          doc.removeEventListener("mousedown", handleMouseDown, true);
+          doc.removeEventListener("mouseup", handleMouseUp, true);
           doc.removeEventListener("mouseover", hoverIn);
           doc.removeEventListener("mouseout", hoverOut);
           if (doc._selectorObserver) {
@@ -611,24 +647,13 @@
         }
       }
 
-      // Handle click to show selector modal
-      function handleClick(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        let selector = getSelector(e.target);
-        let elementText = getElementText(e.target);
-        // Clean up selector mode first
-        window.top.postMessage("__selector_cleanup__", "*");
-        // Show modal with selector and text
-        showSelectorModal(selector, elementText);
-      }
-
       // Attach event listeners
       // Use mouseenter with capture to catch className before hover effects
       doc.addEventListener("mouseenter", captureOriginalClass, true);
       doc.addEventListener("mouseover", hoverIn);
       doc.addEventListener("mouseout", hoverOut);
-      doc.addEventListener("click", handleClick, true);
+      doc.addEventListener("mousedown", handleMouseDown, true);
+      doc.addEventListener("mouseup", handleMouseUp, true);
       window.addEventListener("message", e => {
         if (e.data === "__selector_cleanup__") destroy(doc);
       });
@@ -730,6 +755,9 @@
       doc._classObserver = classObserver;
 
       let lastHovered = null;
+      let mouseDownTime = null;
+      let mouseDownTarget = null;
+      const CLICK_DURATION_THRESHOLD = 300; // milliseconds
 
       // Capture className on mouseenter (fires before mouseover and before hover states)
       function captureOriginalClass(e) {
@@ -737,6 +765,38 @@
         if (el && el.nodeType === 1 && !el.hasAttribute("data-original-class")) {
           el.setAttribute("data-original-class", el.className || "");
         }
+      }
+
+      // Track mousedown to detect click duration
+      function handleMouseDown(e) {
+        mouseDownTime = Date.now();
+        mouseDownTarget = e.target;
+      }
+
+      // Track mouseup and determine if it's a short click
+      function handleMouseUp(e) {
+        if (mouseDownTime === null) return;
+        
+        const clickDuration = Date.now() - mouseDownTime;
+        const isShortClick = clickDuration < CLICK_DURATION_THRESHOLD;
+        const isSameTarget = mouseDownTarget === e.target;
+        
+        // Reset tracking
+        mouseDownTime = null;
+        mouseDownTarget = null;
+        
+        // Only process selector for short clicks on the same target
+        if (isShortClick && isSameTarget) {
+          e.preventDefault();
+          e.stopPropagation();
+          let selector = getSelector(e.target);
+          let elementText = getElementText(e.target);
+          // Clean up selector mode first
+          window.top.postMessage("__selector_cleanup__", "*");
+          // Show modal with selector and text
+          showSelectorModal(selector, elementText);
+        }
+        // For long clicks, let the event propagate normally (don't prevent default)
       }
 
       // Highlight hovered element
@@ -834,7 +894,8 @@
           doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
           doc.querySelectorAll("[data-original-class]").forEach(el => el.removeAttribute("data-original-class"));
           doc.removeEventListener("mouseenter", captureOriginalClass, true);
-          doc.removeEventListener("click", handleClick, true);
+          doc.removeEventListener("mousedown", handleMouseDown, true);
+          doc.removeEventListener("mouseup", handleMouseUp, true);
           doc.removeEventListener("mouseover", hoverIn);
           doc.removeEventListener("mouseout", hoverOut);
           if (doc._selectorObserver) {
@@ -863,24 +924,13 @@
         }
       }
 
-      // Handle click to show selector modal
-      function handleClick(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        let selector = getSelector(e.target);
-        let elementText = getElementText(e.target);
-        // Clean up selector mode first
-        window.top.postMessage("__selector_cleanup__", "*");
-        // Show modal with selector and text
-        showSelectorModal(selector, elementText);
-      }
-
       // Attach event listeners
       // Use mouseenter with capture to catch className before hover effects
       doc.addEventListener("mouseenter", captureOriginalClass, true);
       doc.addEventListener("mouseover", hoverIn);
       doc.addEventListener("mouseout", hoverOut);
-      doc.addEventListener("click", handleClick, true);
+      doc.addEventListener("mousedown", handleMouseDown, true);
+      doc.addEventListener("mouseup", handleMouseUp, true);
       window.addEventListener("message", e => {
         if (e.data === "__selector_cleanup__") destroy(doc);
       });
