@@ -479,6 +479,41 @@
         }
       }
 
+      // Extract element text with fallbacks
+      function getElementText(el) {
+        // First try to get text content
+        let text = el.innerText || el.textContent || '';
+        if (text && text.trim()) {
+          return text.trim();
+        }
+        
+        // Fallback to title
+        if (el.title) {
+          return el.title;
+        }
+        
+        // Fallback to aria-label
+        if (el.getAttribute('aria-label')) {
+          return el.getAttribute('aria-label');
+        }
+        // Fallback to aria-labelledby
+        if (el.getAttribute('aria-labelledby')) {
+          return el.getAttribute('aria-labelledby');
+        }
+        
+        // Fallback to name attribute
+        if (el.name) {
+          return el.name;
+        }
+        
+        // Fallback to alt attribute
+        if (el.alt) {
+          return el.alt;
+        }
+        
+        return '';
+      }
+
       // Generate CSS selector path
       function getSelector(el) {
         let path = [];
@@ -535,7 +570,7 @@
         e.preventDefault();
         e.stopPropagation();
         let selector = getSelector(e.target);
-        let elementText = e.target.innerText || e.target.textContent || '';
+        let elementText = getElementText(e.target);
         // Clean up selector mode first
         window.top.postMessage("__selector_cleanup__", "*");
         // Show modal with selector and text
@@ -652,6 +687,42 @@
         }
       }
 
+      // Extract element text with fallbacks
+      function getElementText(el) {
+        // First try to get text content
+        let text = el.innerText || el.textContent || '';
+        if (text && text.trim()) {
+          return text.trim();
+        }
+        
+        // Fallback to title
+        if (el.title) {
+          return el.title;
+        }
+        
+        // Fallback to aria-label
+        if (el.getAttribute('aria-label')) {
+          return el.getAttribute('aria-label');
+        }
+        
+        // Fallback to aria-labelledby
+        if (el.getAttribute('aria-labelledby')) {
+          return el.getAttribute('aria-labelledby');
+        }
+        
+        // Fallback to name attribute
+        if (el.name) {
+          return el.name;
+        }
+        
+        // Fallback to alt attribute
+        if (el.alt) {
+          return el.alt;
+        }
+        
+        return '';
+      }
+
       // Generate CSS selector path
       function getSelector(el) {
         if (!el || el.nodeType !== 1) return "";
@@ -663,15 +734,6 @@
 
         // Build the base selector
         let selector = `${tag}${cls}`;
-
-        // If multiple siblings share the same tag/class combination, add :nth-child
-        if (el.parentNode) {
-          let siblings = Array.from(el.parentNode.children);
-          let sameTagSiblings = siblings.filter(sib => sib.tagName === el.tagName);
-          if (sameTagSiblings.length > 1 || cls === "") {
-            selector += `:nth-child(${siblings.indexOf(el) + 1})`;
-          }
-        }
 
         return selector;
       }
@@ -712,7 +774,7 @@
         e.preventDefault();
         e.stopPropagation();
         let selector = getSelector(e.target);
-        let elementText = e.target.innerText || e.target.textContent || '';
+        let elementText = getElementText(e.target);
         // Clean up selector mode first
         window.top.postMessage("__selector_cleanup__", "*");
         // Show modal with selector and text
