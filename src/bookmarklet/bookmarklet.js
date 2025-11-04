@@ -449,7 +449,39 @@
       observer.observe(doc.body, { attributes: true, attributeFilter: ["style"] });
       doc._selectorObserver = observer;
 
+      // MutationObserver to capture original className before hover classes are added
+      const classObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const el = mutation.target;
+            // Only capture if we don't already have it stored
+            if (!el.hasAttribute("data-original-class")) {
+              // If we have oldValue, use it; otherwise use current (captured before change)
+              const oldValue = mutation.oldValue !== null ? mutation.oldValue : (el.className || "");
+              el.setAttribute("data-original-class", oldValue);
+            }
+          }
+        });
+      });
+
+      // Start observing class changes on all elements
+      classObserver.observe(doc.body, {
+        attributes: true,
+        attributeFilter: ['class'],
+        attributeOldValue: true,
+        subtree: true
+      });
+      doc._classObserver = classObserver;
+
       let lastHovered = null;
+
+      // Capture className on mouseenter (fires before mouseover and before hover states)
+      function captureOriginalClass(e) {
+        const el = e.target;
+        if (el && el.nodeType === 1 && !el.hasAttribute("data-original-class")) {
+          el.setAttribute("data-original-class", el.className || "");
+        }
+      }
 
       // Highlight hovered element
       function hoverIn(e) {
@@ -460,7 +492,7 @@
         lastHovered = e.target;
         lastHovered.setAttribute("data-selector-shadow", "");
         
-        // Capture original className before any hover classes are added
+        // Ensure we have the original className (should already be captured by mouseenter or MutationObserver)
         if (!lastHovered.hasAttribute("data-original-class")) {
           lastHovered.setAttribute("data-original-class", lastHovered.className || "");
         }
@@ -549,12 +581,17 @@
           doc.querySelectorAll("style[data-selector-style]").forEach(s => s.remove());
           doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
           doc.querySelectorAll("[data-original-class]").forEach(el => el.removeAttribute("data-original-class"));
+          doc.removeEventListener("mouseenter", captureOriginalClass, true);
           doc.removeEventListener("click", handleClick, true);
           doc.removeEventListener("mouseover", hoverIn);
           doc.removeEventListener("mouseout", hoverOut);
           if (doc._selectorObserver) {
             doc._selectorObserver.disconnect();
             delete doc._selectorObserver;
+          }
+          if (doc._classObserver) {
+            doc._classObserver.disconnect();
+            delete doc._classObserver;
           }
           // Clear iframe highlights in main document
           if (doc === document) {
@@ -587,6 +624,8 @@
       }
 
       // Attach event listeners
+      // Use mouseenter with capture to catch className before hover effects
+      doc.addEventListener("mouseenter", captureOriginalClass, true);
       doc.addEventListener("mouseover", hoverIn);
       doc.addEventListener("mouseout", hoverOut);
       doc.addEventListener("click", handleClick, true);
@@ -666,7 +705,39 @@
       observer.observe(doc.body, { attributes: true, attributeFilter: ["style"] });
       doc._selectorObserver = observer;
 
+      // MutationObserver to capture original className before hover classes are added
+      const classObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const el = mutation.target;
+            // Only capture if we don't already have it stored
+            if (!el.hasAttribute("data-original-class")) {
+              // If we have oldValue, use it; otherwise use current (captured before change)
+              const oldValue = mutation.oldValue !== null ? mutation.oldValue : (el.className || "");
+              el.setAttribute("data-original-class", oldValue);
+            }
+          }
+        });
+      });
+
+      // Start observing class changes on all elements
+      classObserver.observe(doc.body, {
+        attributes: true,
+        attributeFilter: ['class'],
+        attributeOldValue: true,
+        subtree: true
+      });
+      doc._classObserver = classObserver;
+
       let lastHovered = null;
+
+      // Capture className on mouseenter (fires before mouseover and before hover states)
+      function captureOriginalClass(e) {
+        const el = e.target;
+        if (el && el.nodeType === 1 && !el.hasAttribute("data-original-class")) {
+          el.setAttribute("data-original-class", el.className || "");
+        }
+      }
 
       // Highlight hovered element
       function hoverIn(e) {
@@ -677,7 +748,7 @@
         lastHovered = e.target;
         lastHovered.setAttribute("data-selector-shadow", "");
         
-        // Capture original className before any hover classes are added
+        // Ensure we have the original className (should already be captured by mouseenter or MutationObserver)
         if (!lastHovered.hasAttribute("data-original-class")) {
           lastHovered.setAttribute("data-original-class", lastHovered.className || "");
         }
@@ -762,12 +833,17 @@
           doc.querySelectorAll("style[data-selector-style]").forEach(s => s.remove());
           doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
           doc.querySelectorAll("[data-original-class]").forEach(el => el.removeAttribute("data-original-class"));
+          doc.removeEventListener("mouseenter", captureOriginalClass, true);
           doc.removeEventListener("click", handleClick, true);
           doc.removeEventListener("mouseover", hoverIn);
           doc.removeEventListener("mouseout", hoverOut);
           if (doc._selectorObserver) {
             doc._selectorObserver.disconnect();
             delete doc._selectorObserver;
+          }
+          if (doc._classObserver) {
+            doc._classObserver.disconnect();
+            delete doc._classObserver;
           }
           // Clear iframe highlights in main document
           if (doc === document) {
@@ -800,6 +876,8 @@
       }
 
       // Attach event listeners
+      // Use mouseenter with capture to catch className before hover effects
+      doc.addEventListener("mouseenter", captureOriginalClass, true);
       doc.addEventListener("mouseover", hoverIn);
       doc.addEventListener("mouseout", hoverOut);
       doc.addEventListener("click", handleClick, true);
