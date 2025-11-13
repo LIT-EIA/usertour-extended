@@ -890,7 +890,7 @@
             if (parentClassName) {
               const parentTag = parentWithClass.tagName.toLowerCase();
               const parentCls = "." + parentClassName.trim().split(/\s+/).map(c => CSS.escape(c)).join(".");
-              selector = `${parentTag}${parentCls} > ${selector}`;
+              selector = `${parentTag}${parentCls} ${selector}`;
               break;
             }
             parentWithClass = parentWithClass.parentElement;
