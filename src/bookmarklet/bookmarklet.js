@@ -880,8 +880,22 @@
           ? "." + className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
           : "";
 
-        // Build the base selector
+        // If element has no class, find first parent with a class and add it to hierarchy
         let selector = `${tag}${cls}`;
+        if (cls === "") {
+          let parentWithClass = el.parentElement;
+          while (parentWithClass && parentWithClass.nodeType === 1 && parentWithClass.tagName.toLowerCase() !== "html" && parentWithClass.tagName.toLowerCase() !== "body") {
+            const parentOriginalClass = parentWithClass.getAttribute("data-original-class");
+            const parentClassName = parentOriginalClass !== null ? parentOriginalClass : (parentWithClass.className || "");
+            if (parentClassName) {
+              const parentTag = parentWithClass.tagName.toLowerCase();
+              const parentCls = "." + parentClassName.trim().split(/\s+/).map(c => CSS.escape(c)).join(".");
+              selector = `${parentTag}${parentCls} > ${selector}`;
+              break;
+            }
+            parentWithClass = parentWithClass.parentElement;
+          }
+        }
 
         return selector;
       }
