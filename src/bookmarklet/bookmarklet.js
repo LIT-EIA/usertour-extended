@@ -30,6 +30,12 @@
   faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
   document.head.appendChild(faLink);
 
+  // Load Roboto font
+  const robotoLink = document.createElement('link');
+  robotoLink.rel = 'stylesheet';
+  robotoLink.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap';
+  document.head.appendChild(robotoLink);
+
   // Inject styles
   const style = document.createElement('style');
   style.textContent = `
@@ -51,15 +57,69 @@
       width: 320px;
       max-width: 90%;
       padding: 20px;
-      font-family: 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Roboto', sans-serif !important;
+      font-size: 14px !important;
+      color: #000 !important;
       animation: slideUp 0.4s ease-out;
+    }
+
+    .custom-modal * {
+      font-family: 'Roboto', sans-serif !important;
+      color: #000 !important;
+    }
+
+    .custom-modal .fa,
+    .custom-modal [class^="fa-"],
+    .custom-modal [class*=" fa-"] {
+      font-family: 'FontAwesome' !important;
+    }
+
+    .custom-modal h1 {
+      font-size: 20px !important;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
     }
 
     .custom-modal h2 {
       margin-top: 0;
-      font-size: 1.3em;
+      font-size: 18.2px !important;
       margin-bottom: 14px;
-      color: #222;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
+    }
+
+    .custom-modal h3 {
+      font-size: 16.8px !important;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
+    }
+
+    .custom-modal h4 {
+      font-size: 15.4px !important;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
+    }
+
+    .custom-modal h5 {
+      font-size: 14px !important;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
+    }
+
+    .custom-modal h6 {
+      font-size: 12.6px !important;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
+    }
+
+    .custom-modal p {
+      font-size: 14px !important;
+      color: #000 !important;
+    }
+
+    .custom-modal em {
+      font-size: 14px !important;
+      color: #000 !important;
     }
 
     .close-button {
@@ -68,14 +128,15 @@
       right: 10px;
       background: none;
       border: none;
-      font-size: 1.2em;
-      color: #666;
+      font-size: 16.8px !important;
+      color: #666 !important;
       cursor: pointer;
       transition: color 0.2s ease;
+      font-family: 'Roboto', sans-serif !important;
     }
 
     .close-button:hover {
-      color: #000;
+      color: #000 !important;
     }
 
     .button-grid {
@@ -88,16 +149,18 @@
     .button-grid .custom-button {
       width: 100%;
       aspect-ratio: 1 / 1;
-      font-size: 0.75em;
+      font-size: 10.5px !important;
       padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      font-family: 'Roboto', sans-serif !important;
+      color: #000 !important;
     }
 
     .button-grid .custom-button i {
-      font-size: 1.2em;
+      font-size: 16.8px !important;
       margin-bottom: 4px;
     }
 
@@ -112,8 +175,9 @@
     }
 
     .toggle-label {
-      font-size: 0.9em;
-      color: #444;
+      font-size: 12.6px !important;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
     }
 
     .switch {
@@ -170,10 +234,11 @@
       border: none;
       border-radius: 6px;
       background: #e0e0e0;
-      color: #333;
-      font-size: 0.85em;
+      color: #000 !important;
+      font-size: 11.9px !important;
       cursor: pointer;
       transition: background 0.2s ease;
+      font-family: 'Roboto', sans-serif !important;
     }
 
     .custom-button:hover {
@@ -194,10 +259,11 @@
     }
 
     .selector-field-label {
-      font-size: 0.85em;
-      color: #555;
+      font-size: 11.9px !important;
+      color: #000 !important;
       margin-bottom: 6px;
       display: block;
+      font-family: 'Roboto', sans-serif !important;
     }
 
     .selector-field-wrapper {
@@ -212,10 +278,10 @@
       padding: 8px 10px;
       border: 1px solid #ccc;
       border-radius: 6px;
-      font-size: 0.85em;
-      font-family: 'Courier New', monospace;
+      font-size: 11.9px !important;
+      font-family: 'Courier New', monospace !important;
       background: white;
-      color: #333;
+      color: #000 !important;
     }
 
     .selector-field:read-only {
@@ -229,8 +295,8 @@
       border: none;
       border-radius: 6px;
       background: #e0e0e0;
-      color: #333;
-      font-size: 0.85em;
+      color: #000 !important;
+      font-size: 11.9px !important;
       cursor: pointer;
       transition: background 0.2s ease;
       white-space: nowrap;
@@ -239,6 +305,7 @@
       gap: 4px;
       width: 90px;
       justify-content: center;
+      font-family: 'Roboto', sans-serif !important;
     }
 
     .copy-button:hover {
@@ -246,7 +313,19 @@
     }
 
     .copy-button i {
-      font-size: 1em;
+      font-size: 14px !important;
+    }
+
+    .copy-button span {
+      font-size: 11.9px !important;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
+    }
+
+    .custom-button span {
+      font-size: inherit !important;
+      color: #000 !important;
+      font-family: 'Roboto', sans-serif !important;
     }
 
     .custom-hidden {
