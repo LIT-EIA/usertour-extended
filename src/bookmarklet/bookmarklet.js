@@ -361,7 +361,7 @@
     </div>
     <p>Non-unique platforms</p>
     <div class="button-grid">
-        <button class="custom-button select-main-only" aria-label="Select an element">
+        <button class="custom-button select-main-only-2" aria-label="Select an element">
         <i class="fa fa-mouse-pointer"></i>
         <span>Select</span>
       </button>
@@ -800,7 +800,7 @@
     window.addEventListener("message", cleanupHandler);
   });
 
-  const selectButtonMainOnly = modal.querySelector('.button-grid .custom-button.select-main-only');
+/*   const selectButtonMainOnly = modal.querySelector('.button-grid .custom-button.select-main-only');
   attachCloseAction(selectButtonMainOnly);
   attachButtonAction(selectButtonMainOnly, () => {
     function inject(doc) {
@@ -984,6 +984,359 @@
               break;
             }
             parentWithClass = parentWithClass.parentElement;
+          }
+        }
+
+        return selector;
+      }
+
+      // Cleanup function
+      function destroy(doc) {
+        try {
+          doc.body.style.cursor = "";
+          doc.querySelectorAll("style[data-selector-style]").forEach(s => s.remove());
+          doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
+          doc.querySelectorAll("[data-original-class]").forEach(el => el.removeAttribute("data-original-class"));
+          doc.removeEventListener("mouseenter", captureOriginalClass, true);
+          doc.removeEventListener("mousedown", handleMouseDown, true);
+          doc.removeEventListener("mouseup", handleMouseUp, true);
+          doc.removeEventListener("mouseover", hoverIn);
+          doc.removeEventListener("mouseout", hoverOut);
+          if (doc._selectorObserver) {
+            doc._selectorObserver.disconnect();
+            delete doc._selectorObserver;
+          }
+          if (doc._classObserver) {
+            doc._classObserver.disconnect();
+            delete doc._classObserver;
+          }
+          // Clear iframe highlights in main document
+          if (doc === document) {
+            Array.from(document.querySelectorAll("iframe")).forEach(f => {
+              f.style.boxShadow = "";
+              try {
+                if (f.contentDocument && f.contentDocument.documentElement) {
+                  f.contentDocument.documentElement.style.boxShadow = "";
+                }
+              } catch (e) {
+                // Cross-origin iframe, ignore
+              }
+            });
+          }
+        } catch (e) {
+          console.warn("Cleanup failed:", e);
+        }
+      }
+
+      // Attach event listeners
+      // Use mouseenter with capture to catch className before hover effects
+      doc.addEventListener("mouseenter", captureOriginalClass, true);
+      doc.addEventListener("mouseover", hoverIn);
+      doc.addEventListener("mouseout", hoverOut);
+      doc.addEventListener("mousedown", handleMouseDown, true);
+      doc.addEventListener("mouseup", handleMouseUp, true);
+      window.addEventListener("message", e => {
+        if (e.data === "__selector_cleanup__") destroy(doc);
+      });
+    }
+
+    // Inject into main document
+    inject(document);
+
+    // Track iframe event listeners for cleanup
+    const iframeHandlers = [];
+
+    // Inject into all iframes
+    Array.from(document.querySelectorAll("iframe")).forEach(f => {
+      try {
+        inject(f.contentDocument || f.contentWindow.document);
+        
+        const iframeMouseOver = () => {
+          f.style.boxShadow = "";
+          f.contentDocument.documentElement.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
+        };
+        
+        const iframeMouseOut = () => {
+          f.contentDocument.documentElement.style.boxShadow = "";
+        };
+        
+        f.contentDocument.documentElement.addEventListener("mouseover", iframeMouseOver);
+        f.contentDocument.documentElement.addEventListener("mouseout", iframeMouseOut);
+        
+        // Store handlers for cleanup
+        iframeHandlers.push({
+          iframe: f,
+          mouseover: iframeMouseOver,
+          mouseout: iframeMouseOut,
+          documentElement: f.contentDocument.documentElement
+        });
+      } catch (e) {
+        console.warn("Cross-origin iframe skipped");
+      }
+    });
+
+    // Cleanup iframe handlers when cleanup message is received
+    const cleanupHandler = (e) => {
+      if (e.data === "__selector_cleanup__") {
+        iframeHandlers.forEach(handler => {
+          try {
+            handler.iframe.style.boxShadow = "";
+            handler.documentElement.style.boxShadow = "";
+            handler.documentElement.removeEventListener("mouseover", handler.mouseover);
+            handler.documentElement.removeEventListener("mouseout", handler.mouseout);
+          } catch (err) {
+            // Ignore errors (e.g., iframe removed or cross-origin)
+          }
+        });
+      }
+    };
+    
+    window.addEventListener("message", cleanupHandler);
+  }); */
+
+  const selectButtonMainOnly2 = modal.querySelector('.button-grid .custom-button.select-main-only-2');
+  attachCloseAction(selectButtonMainOnly2);
+  attachButtonAction(selectButtonMainOnly2, () => {
+    function inject(doc) {
+      // Add crosshair cursor style
+      const style = doc.createElement("style");
+      style.textContent = `* { cursor: crosshair !important }`;
+      style.setAttribute("data-selector-style", "");
+      doc.head.appendChild(style);
+
+      // Ensure cursor stays crosshair even if overridden
+      const observer = new MutationObserver(() => {
+        doc.body.style.setProperty("cursor", "crosshair", "important");
+      });
+      observer.observe(doc.body, { attributes: true, attributeFilter: ["style"] });
+      doc._selectorObserver = observer;
+
+      // MutationObserver to capture original className before hover classes are added
+      const classObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const el = mutation.target;
+            // Only capture if we don't already have it stored
+            if (!el.hasAttribute("data-original-class")) {
+              // If we have oldValue, use it; otherwise use current (captured before change)
+              const oldValue = mutation.oldValue !== null ? mutation.oldValue : (el.className || "");
+              el.setAttribute("data-original-class", oldValue);
+            }
+          }
+        });
+      });
+
+      // Start observing class changes on all elements
+      classObserver.observe(doc.body, {
+        attributes: true,
+        attributeFilter: ['class'],
+        attributeOldValue: true,
+        subtree: true
+      });
+      doc._classObserver = classObserver;
+
+      let lastHovered = null;
+      let mouseDownTime = null;
+      let mouseDownTarget = null;
+      const CLICK_DURATION_THRESHOLD = 300; // milliseconds
+
+      // Capture className on mouseenter (fires before mouseover and before hover states)
+      function captureOriginalClass(e) {
+        const el = e.target;
+        if (el && el.nodeType === 1 && !el.hasAttribute("data-original-class")) {
+          el.setAttribute("data-original-class", el.className || "");
+        }
+      }
+
+      // Track mousedown to detect click duration
+      function handleMouseDown(e) {
+        mouseDownTime = Date.now();
+        mouseDownTarget = e.target;
+      }
+
+      // Track mouseup and determine if it's a short click
+      function handleMouseUp(e) {
+        if (mouseDownTime === null) return;
+        
+        const clickDuration = Date.now() - mouseDownTime;
+        const isShortClick = clickDuration < CLICK_DURATION_THRESHOLD;
+        const isSameTarget = mouseDownTarget === e.target;
+        
+        // Reset tracking
+        mouseDownTime = null;
+        mouseDownTarget = null;
+        
+        // Only process selector for short clicks on the same target
+        if (isShortClick && isSameTarget) {
+          e.preventDefault();
+          e.stopPropagation();
+          let selector = getSelector(e.target);
+          let elementText = getElementText(e.target);
+          // Clean up selector mode first
+          window.top.postMessage("__selector_cleanup__", "*");
+          // Show modal with selector and text
+          showSelectorModal(selector, elementText);
+        }
+        // For long clicks, let the event propagate normally (don't prevent default)
+      }
+
+      // Highlight hovered element
+      function hoverIn(e) {
+        if (lastHovered) {
+          lastHovered.removeAttribute("data-selector-shadow");
+          lastHovered.style.boxShadow = "";
+        }
+        lastHovered = e.target;
+        lastHovered.setAttribute("data-selector-shadow", "");
+        
+        // Ensure we have the original className (should already be captured by mouseenter or MutationObserver)
+        if (!lastHovered.hasAttribute("data-original-class")) {
+          lastHovered.setAttribute("data-original-class", lastHovered.className || "");
+        }
+
+        // Special styling for iframes
+        if (doc === document && lastHovered.tagName.toLowerCase() === "iframe") {
+          lastHovered.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
+          try {
+            lastHovered.contentDocument.documentElement.style.boxShadow = "";
+          } catch { }
+        } else {
+          lastHovered.style.boxShadow = "0 0 0 2px rgba(0,123,255,0.75), inset 0 0 0 9999px rgba(0,123,255,0.15)";
+        }
+      }
+
+      // Remove highlight on mouse out
+      function hoverOut(e) {
+        if (e.target === lastHovered) {
+          e.target.removeAttribute("data-selector-shadow");
+          e.target.style.boxShadow = "";
+        }
+      }
+
+      // Extract element text with fallbacks
+      function getElementText(el) {
+        // First try to get text content
+        let text = el.innerText || el.textContent || '';
+        if (text && text.trim()) {
+          return text.trim();
+        }
+        
+        // Fallback to title
+        if (el.title) {
+          return el.title;
+        }
+        
+        // Fallback to aria-label
+        if (el.getAttribute('aria-label')) {
+          return el.getAttribute('aria-label');
+        }
+        
+        // Fallback to aria-labelledby
+        if (el.getAttribute('aria-labelledby')) {
+          return el.getAttribute('aria-labelledby');
+        }
+        
+        // Fallback to name attribute
+        if (el.name) {
+          return el.name;
+        }
+        
+        // Fallback to alt attribute
+        if (el.alt) {
+          return el.alt;
+        }
+        
+        return '';
+      }
+
+      // Generate CSS selector path
+      function getSelector(el) {
+        if (!el || el.nodeType !== 1) return "";
+
+        let tag = el.tagName.toLowerCase();
+        // Use original className if available (captured before hover classes), otherwise current className
+        const originalClass = el.getAttribute("data-original-class");
+        const className = originalClass !== null ? originalClass : (el.className || "");
+        let cls = className
+          ? "." + className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
+          : "";
+
+        // If element has no class, find first parent with a class and add it to hierarchy
+        let selector = `${tag}${cls}`;
+        if (cls === "") {
+          let parentWithClass = el.parentElement;
+          while (parentWithClass && parentWithClass.nodeType === 1 && parentWithClass.tagName.toLowerCase() !== "html" && parentWithClass.tagName.toLowerCase() !== "body") {
+            const parentOriginalClass = parentWithClass.getAttribute("data-original-class");
+            const parentClassName = parentOriginalClass !== null ? parentOriginalClass : (parentWithClass.className || "");
+            if (parentClassName) {
+              const parentTag = parentWithClass.tagName.toLowerCase();
+              const parentCls = "." + parentClassName.trim().split(/\s+/).map(c => CSS.escape(c)).join(".");
+              selector = `${parentTag}${parentCls} ${selector}`;
+              break;
+            }
+            parentWithClass = parentWithClass.parentElement;
+          }
+        }
+
+        // Check if element comes after div with widgetid="OASWSUPAPPSection-stc_tablist"
+        const elDoc = el.ownerDocument || doc;
+        
+        // Check for tablist div in current document first
+        let tablistDiv = elDoc.querySelector('div[widgetid="OASWSUPAPPSection-stc_tablist"]');
+        let tablistDoc = elDoc;
+        
+        // If not found, also check main document (whether in iframe or not)
+        if (!tablistDiv) {
+          try {
+            const mainDoc = window.top.document;
+            if (mainDoc !== elDoc) {
+              tablistDiv = mainDoc.querySelector('div[widgetid="OASWSUPAPPSection-stc_tablist"]');
+              if (tablistDiv) {
+                tablistDoc = mainDoc;
+              }
+            }
+          } catch (e) {
+            // Cross-origin iframe, ignore
+          }
+        }
+        
+        if (tablistDiv) {
+          // Check if the selected element is a descendant of or comes after this div
+          let currentEl = el;
+          let isAfterTablist = false;
+          
+          // Check if element is descendant of tablist div (only if in same document)
+          if (elDoc === tablistDoc) {
+            while (currentEl && currentEl !== elDoc.body) {
+              if (currentEl === tablistDiv) {
+                isAfterTablist = true;
+                break;
+              }
+              currentEl = currentEl.parentElement;
+            }
+            
+            // If not descendant, check if element comes after tablist div in DOM
+            if (!isAfterTablist && tablistDiv.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) {
+              isAfterTablist = true;
+            }
+          } else {
+            // Element is in iframe, tablist is in main document
+            // Consider element as "after" tablist if tablist exists in main doc
+            isAfterTablist = true;
+          }
+          
+          if (isAfterTablist) {
+            // Find the .tabLabel element with aria-selected="true" inside the tablist div
+            const activeTabLabel = tablistDiv.querySelector('.tabLabel[aria-selected="true"]');
+            
+            if (activeTabLabel) {
+              const elementTitle = activeTabLabel.getAttribute('title') || '';
+              
+              if (elementTitle) {
+                const tabSelector = `.tabLabel[title="${CSS.escape(elementTitle)}"][aria-selected="true"]`;
+                selector = `${selector} <<< ${tabSelector}`;
+              }
+            }
           }
         }
 
