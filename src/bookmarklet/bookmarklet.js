@@ -359,7 +359,7 @@
       <button class="custom-button custom-hidden">3</button>
       <button class="custom-button custom-hidden">4</button>
     </div>
-    <p>Non-unique platforms</p>
+    <p><em>Non-unique platforms</em></p>
     <div class="button-grid">
         <button class="custom-button select-main-only-2" aria-label="Select an element">
         <i class="fa fa-mouse-pointer"></i>
