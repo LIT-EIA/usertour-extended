@@ -347,6 +347,8 @@
   closeBtn.setAttribute('aria-label', 'Close modal');
   closeBtn.onclick = () => overlay.remove();
 
+  const pageName = document.title;
+
   modal.innerHTML = `
     <h2>Usertour Helper</h2>
     <p><em>Unique platforms</em></p>
@@ -355,9 +357,6 @@
         <i class="fa fa-mouse-pointer"></i>
         <span>Select</span>
       </button>
-      <button class="custom-button custom-hidden">2</button>
-      <button class="custom-button custom-hidden">3</button>
-      <button class="custom-button custom-hidden">4</button>
     </div>
     <p><em>Non-unique platforms</em></p>
     <div class="button-grid">
@@ -365,9 +364,6 @@
         <i class="fa fa-mouse-pointer"></i>
         <span>Select</span>
       </button>
-      <button class="custom-button custom-hidden">6</button>
-      <button class="custom-button custom-hidden">7</button>
-      <button class="custom-button custom-hidden">8</button>
     </div>
 
     <div class="toggle-container">
@@ -377,11 +373,18 @@
         <span class="slider"></span>
       </label>
     </div>
-
-    <div class="button-list custom-hidden">
-      <button class="custom-button">Option A</button>
-      <button class="custom-button">Option B</button>
-      <button class="custom-button">Option C</button>
+     <div class="button-grid">
+      <button class="custom-button reset-completions">
+        <i class="fa fa-undo"></i>
+        <span>Reset Completions</span>
+      </button>
+    </div>
+    <div class="page-name-section selector-field-container">
+    <label class="selector-field-label">Page Name</label>
+      <div class="selector-field-wrapper">
+        <input type="text" class="selector-field selector-field-page-name" readonly="" value="${pageName}">
+        <button class="copy-button copy-button-page-name"><i class="fa fa-clone"></i><span>Copy</span></button>
+      </div>
     </div>
   `;
 
@@ -402,7 +405,7 @@
   }
 
   // Function to show selector modal
-  function showSelectorModal(selector, elementText) {
+  function showSelectorModal(selector, selectorWithTab, elementText) {
     // Remove any existing selector modal
     const existingModal = document.querySelector('.selector-modal-overlay');
     if (existingModal) {
@@ -427,20 +430,20 @@
     // Create selector field container
     const selectorContainer = document.createElement('div');
     selectorContainer.className = 'selector-field-container';
-    
+
     const selectorLabel = document.createElement('label');
     selectorLabel.className = 'selector-field-label';
     selectorLabel.textContent = 'CSS selector';
-    
+
     const selectorWrapper = document.createElement('div');
     selectorWrapper.className = 'selector-field-wrapper';
-    
+
     const selectorInput = document.createElement('input');
     selectorInput.type = 'text';
     selectorInput.className = 'selector-field';
     selectorInput.value = selector;
     selectorInput.readOnly = true;
-    
+
     const selectorCopyBtn = document.createElement('button');
     selectorCopyBtn.className = 'copy-button';
     const selectorIcon = document.createElement('i');
@@ -457,7 +460,7 @@
         }, 2000);
       });
     };
-    
+
     selectorWrapper.appendChild(selectorInput);
     selectorWrapper.appendChild(selectorCopyBtn);
     selectorContainer.appendChild(selectorLabel);
@@ -466,20 +469,20 @@
     // Create text field container
     const textContainer = document.createElement('div');
     textContainer.className = 'selector-field-container';
-    
+
     const textLabel = document.createElement('label');
     textLabel.className = 'selector-field-label';
     textLabel.textContent = 'Element text';
-    
+
     const textWrapper = document.createElement('div');
     textWrapper.className = 'selector-field-wrapper';
-    
+
     const textInput = document.createElement('input');
     textInput.type = 'text';
     textInput.className = 'selector-field';
     textInput.value = elementText || '';
     textInput.readOnly = true;
-    
+
     const textCopyBtn = document.createElement('button');
     textCopyBtn.className = 'copy-button';
     const textIcon = document.createElement('i');
@@ -496,21 +499,62 @@
         }, 2000);
       });
     };
-    
+
     textWrapper.appendChild(textInput);
     textWrapper.appendChild(textCopyBtn);
     textContainer.appendChild(textLabel);
     textContainer.appendChild(textWrapper);
 
+    // Create selector field container
+    const selectorContainer2 = document.createElement('div');
+    selectorContainer2.className = 'selector-field-container';
+
+    const selectorLabel2 = document.createElement('label');
+    selectorLabel2.className = 'selector-field-label';
+    selectorLabel2.textContent = 'CSS selector (Specific Tab)';
+
+    const selectorWrapper2 = document.createElement('div');
+    selectorWrapper2.className = 'selector-field-wrapper';
+
+    const selectorInput2 = document.createElement('input');
+    selectorInput2.type = 'text';
+    selectorInput2.className = 'selector-field';
+    selectorInput2.value = selectorWithTab;
+    selectorInput2.readOnly = true;
+
+    const selectorCopyBtn2 = document.createElement('button');
+    selectorCopyBtn2.className = 'copy-button';
+    const selectorIcon2 = document.createElement('i');
+    selectorIcon2.className = 'fa fa-clone';
+    const selectorText2 = document.createElement('span');
+    selectorText2.textContent = 'Copy';
+    selectorCopyBtn2.appendChild(selectorIcon2);
+    selectorCopyBtn2.appendChild(selectorText2);
+    selectorCopyBtn2.onclick = () => {
+      navigator.clipboard.writeText(selectorWithTab).then(() => {
+        selectorText2.textContent = 'Copied';
+        setTimeout(() => {
+          selectorText2.textContent = 'Copy';
+        }, 2000);
+      });
+    };
+
+    selectorWrapper2.appendChild(selectorInput2);
+    selectorWrapper2.appendChild(selectorCopyBtn2);
+    selectorContainer2.appendChild(selectorLabel2);
+    selectorContainer2.appendChild(selectorWrapper2);
+
     // Build modal
     const modalTitle = document.createElement('h2');
     modalTitle.textContent = 'Selector Details';
-    
+
     selectorModal.appendChild(closeBtn);
     selectorModal.appendChild(modalTitle);
     selectorModal.appendChild(textContainer);
     selectorModal.appendChild(selectorContainer);
-    
+    if (selectorWithTab) {
+      selectorModal.appendChild(selectorContainer2);
+    }
     selectorOverlay.appendChild(selectorModal);
     document.body.appendChild(selectorOverlay);
   }
@@ -579,25 +623,26 @@
       // Track mouseup and determine if it's a short click
       function handleMouseUp(e) {
         if (mouseDownTime === null) return;
-        
+
         const clickDuration = Date.now() - mouseDownTime;
         const isShortClick = clickDuration < CLICK_DURATION_THRESHOLD;
         const isSameTarget = mouseDownTarget === e.target;
-        
+
         // Reset tracking
         mouseDownTime = null;
         mouseDownTarget = null;
-        
+
         // Only process selector for short clicks on the same target
         if (isShortClick && isSameTarget) {
           e.preventDefault();
           e.stopPropagation();
           let selector = getSelector(e.target);
           let elementText = getElementText(e.target);
+          let selectorWithTab = null;
           // Clean up selector mode first
           window.top.postMessage("__selector_cleanup__", "*");
           // Show modal with selector and text
-          showSelectorModal(selector, elementText);
+          showSelectorModal(selector, selectorWithTab, elementText);
         } else if (!isShortClick && isSameTarget) {
           // For long clicks, reset data-original-class so it can be recaptured on hoverIn
           e.target.removeAttribute("data-original-class");
@@ -613,7 +658,7 @@
         }
         lastHovered = e.target;
         lastHovered.setAttribute("data-selector-shadow", "");
-        
+
         // Ensure we have the original className (should already be captured by mouseenter or MutationObserver)
         if (!lastHovered.hasAttribute("data-original-class")) {
           lastHovered.setAttribute("data-original-class", lastHovered.className || "");
@@ -645,12 +690,12 @@
         if (text && text.trim()) {
           return text.trim();
         }
-        
+
         // Fallback to title
         if (el.title) {
           return el.title;
         }
-        
+
         // Fallback to aria-label
         if (el.getAttribute('aria-label')) {
           return el.getAttribute('aria-label');
@@ -659,17 +704,17 @@
         if (el.getAttribute('aria-labelledby')) {
           return el.getAttribute('aria-labelledby');
         }
-        
+
         // Fallback to name attribute
         if (el.name) {
           return el.name;
         }
-        
+
         // Fallback to alt attribute
         if (el.alt) {
           return el.alt;
         }
-        
+
         return '';
       }
 
@@ -756,19 +801,19 @@
     Array.from(document.querySelectorAll("iframe")).forEach(f => {
       try {
         inject(f.contentDocument || f.contentWindow.document);
-        
+
         const iframeMouseOver = () => {
           f.style.boxShadow = "";
           f.contentDocument.documentElement.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
         };
-        
+
         const iframeMouseOut = () => {
           f.contentDocument.documentElement.style.boxShadow = "";
         };
-        
+
         f.contentDocument.documentElement.addEventListener("mouseover", iframeMouseOver);
         f.contentDocument.documentElement.addEventListener("mouseout", iframeMouseOut);
-        
+
         // Store handlers for cleanup
         iframeHandlers.push({
           iframe: f,
@@ -796,303 +841,9 @@
         });
       }
     };
-    
+
     window.addEventListener("message", cleanupHandler);
   });
-
-/*   const selectButtonMainOnly = modal.querySelector('.button-grid .custom-button.select-main-only');
-  attachCloseAction(selectButtonMainOnly);
-  attachButtonAction(selectButtonMainOnly, () => {
-    function inject(doc) {
-      // Add crosshair cursor style
-      const style = doc.createElement("style");
-      style.textContent = `* { cursor: crosshair !important }`;
-      style.setAttribute("data-selector-style", "");
-      doc.head.appendChild(style);
-
-      // Ensure cursor stays crosshair even if overridden
-      const observer = new MutationObserver(() => {
-        doc.body.style.setProperty("cursor", "crosshair", "important");
-      });
-      observer.observe(doc.body, { attributes: true, attributeFilter: ["style"] });
-      doc._selectorObserver = observer;
-
-      // MutationObserver to capture original className before hover classes are added
-      const classObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            const el = mutation.target;
-            // Only capture if we don't already have it stored
-            if (!el.hasAttribute("data-original-class")) {
-              // If we have oldValue, use it; otherwise use current (captured before change)
-              const oldValue = mutation.oldValue !== null ? mutation.oldValue : (el.className || "");
-              el.setAttribute("data-original-class", oldValue);
-            }
-          }
-        });
-      });
-
-      // Start observing class changes on all elements
-      classObserver.observe(doc.body, {
-        attributes: true,
-        attributeFilter: ['class'],
-        attributeOldValue: true,
-        subtree: true
-      });
-      doc._classObserver = classObserver;
-
-      let lastHovered = null;
-      let mouseDownTime = null;
-      let mouseDownTarget = null;
-      const CLICK_DURATION_THRESHOLD = 300; // milliseconds
-
-      // Capture className on mouseenter (fires before mouseover and before hover states)
-      function captureOriginalClass(e) {
-        const el = e.target;
-        if (el && el.nodeType === 1 && !el.hasAttribute("data-original-class")) {
-          el.setAttribute("data-original-class", el.className || "");
-        }
-      }
-
-      // Track mousedown to detect click duration
-      function handleMouseDown(e) {
-        mouseDownTime = Date.now();
-        mouseDownTarget = e.target;
-      }
-
-      // Track mouseup and determine if it's a short click
-      function handleMouseUp(e) {
-        if (mouseDownTime === null) return;
-        
-        const clickDuration = Date.now() - mouseDownTime;
-        const isShortClick = clickDuration < CLICK_DURATION_THRESHOLD;
-        const isSameTarget = mouseDownTarget === e.target;
-        
-        // Reset tracking
-        mouseDownTime = null;
-        mouseDownTarget = null;
-        
-        // Only process selector for short clicks on the same target
-        if (isShortClick && isSameTarget) {
-          e.preventDefault();
-          e.stopPropagation();
-          let selector = getSelector(e.target);
-          let elementText = getElementText(e.target);
-          // Clean up selector mode first
-          window.top.postMessage("__selector_cleanup__", "*");
-          // Show modal with selector and text
-          showSelectorModal(selector, elementText);
-        } else if (!isShortClick && isSameTarget) {
-          // For long clicks, reset data-original-class so it can be recaptured on hoverIn
-          e.target.removeAttribute("data-original-class");
-        }
-        // For long clicks, let the event propagate normally (don't prevent default)
-      }
-
-      // Highlight hovered element
-      function hoverIn(e) {
-        if (lastHovered) {
-          lastHovered.removeAttribute("data-selector-shadow");
-          lastHovered.style.boxShadow = "";
-        }
-        lastHovered = e.target;
-        lastHovered.setAttribute("data-selector-shadow", "");
-        
-        // Ensure we have the original className (should already be captured by mouseenter or MutationObserver)
-        if (!lastHovered.hasAttribute("data-original-class")) {
-          lastHovered.setAttribute("data-original-class", lastHovered.className || "");
-        }
-
-        // Special styling for iframes
-        if (doc === document && lastHovered.tagName.toLowerCase() === "iframe") {
-          lastHovered.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
-          try {
-            lastHovered.contentDocument.documentElement.style.boxShadow = "";
-          } catch { }
-        } else {
-          lastHovered.style.boxShadow = "0 0 0 2px rgba(0,123,255,0.75), inset 0 0 0 9999px rgba(0,123,255,0.15)";
-        }
-      }
-
-      // Remove highlight on mouse out
-      function hoverOut(e) {
-        if (e.target === lastHovered) {
-          e.target.removeAttribute("data-selector-shadow");
-          e.target.style.boxShadow = "";
-        }
-      }
-
-      // Extract element text with fallbacks
-      function getElementText(el) {
-        // First try to get text content
-        let text = el.innerText || el.textContent || '';
-        if (text && text.trim()) {
-          return text.trim();
-        }
-        
-        // Fallback to title
-        if (el.title) {
-          return el.title;
-        }
-        
-        // Fallback to aria-label
-        if (el.getAttribute('aria-label')) {
-          return el.getAttribute('aria-label');
-        }
-        
-        // Fallback to aria-labelledby
-        if (el.getAttribute('aria-labelledby')) {
-          return el.getAttribute('aria-labelledby');
-        }
-        
-        // Fallback to name attribute
-        if (el.name) {
-          return el.name;
-        }
-        
-        // Fallback to alt attribute
-        if (el.alt) {
-          return el.alt;
-        }
-        
-        return '';
-      }
-
-      // Generate CSS selector path
-      function getSelector(el) {
-        if (!el || el.nodeType !== 1) return "";
-
-        let tag = el.tagName.toLowerCase();
-        // Use original className if available (captured before hover classes), otherwise current className
-        const originalClass = el.getAttribute("data-original-class");
-        const className = originalClass !== null ? originalClass : (el.className || "");
-        let cls = className
-          ? "." + className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
-          : "";
-
-        // If element has no class, find first parent with a class and add it to hierarchy
-        let selector = `${tag}${cls}`;
-        if (cls === "") {
-          let parentWithClass = el.parentElement;
-          while (parentWithClass && parentWithClass.nodeType === 1 && parentWithClass.tagName.toLowerCase() !== "html" && parentWithClass.tagName.toLowerCase() !== "body") {
-            const parentOriginalClass = parentWithClass.getAttribute("data-original-class");
-            const parentClassName = parentOriginalClass !== null ? parentOriginalClass : (parentWithClass.className || "");
-            if (parentClassName) {
-              const parentTag = parentWithClass.tagName.toLowerCase();
-              const parentCls = "." + parentClassName.trim().split(/\s+/).map(c => CSS.escape(c)).join(".");
-              selector = `${parentTag}${parentCls} ${selector}`;
-              break;
-            }
-            parentWithClass = parentWithClass.parentElement;
-          }
-        }
-
-        return selector;
-      }
-
-      // Cleanup function
-      function destroy(doc) {
-        try {
-          doc.body.style.cursor = "";
-          doc.querySelectorAll("style[data-selector-style]").forEach(s => s.remove());
-          doc.querySelectorAll("[data-selector-shadow]").forEach(el => el.style.boxShadow = "");
-          doc.querySelectorAll("[data-original-class]").forEach(el => el.removeAttribute("data-original-class"));
-          doc.removeEventListener("mouseenter", captureOriginalClass, true);
-          doc.removeEventListener("mousedown", handleMouseDown, true);
-          doc.removeEventListener("mouseup", handleMouseUp, true);
-          doc.removeEventListener("mouseover", hoverIn);
-          doc.removeEventListener("mouseout", hoverOut);
-          if (doc._selectorObserver) {
-            doc._selectorObserver.disconnect();
-            delete doc._selectorObserver;
-          }
-          if (doc._classObserver) {
-            doc._classObserver.disconnect();
-            delete doc._classObserver;
-          }
-          // Clear iframe highlights in main document
-          if (doc === document) {
-            Array.from(document.querySelectorAll("iframe")).forEach(f => {
-              f.style.boxShadow = "";
-              try {
-                if (f.contentDocument && f.contentDocument.documentElement) {
-                  f.contentDocument.documentElement.style.boxShadow = "";
-                }
-              } catch (e) {
-                // Cross-origin iframe, ignore
-              }
-            });
-          }
-        } catch (e) {
-          console.warn("Cleanup failed:", e);
-        }
-      }
-
-      // Attach event listeners
-      // Use mouseenter with capture to catch className before hover effects
-      doc.addEventListener("mouseenter", captureOriginalClass, true);
-      doc.addEventListener("mouseover", hoverIn);
-      doc.addEventListener("mouseout", hoverOut);
-      doc.addEventListener("mousedown", handleMouseDown, true);
-      doc.addEventListener("mouseup", handleMouseUp, true);
-      window.addEventListener("message", e => {
-        if (e.data === "__selector_cleanup__") destroy(doc);
-      });
-    }
-
-    // Inject into main document
-    inject(document);
-
-    // Track iframe event listeners for cleanup
-    const iframeHandlers = [];
-
-    // Inject into all iframes
-    Array.from(document.querySelectorAll("iframe")).forEach(f => {
-      try {
-        inject(f.contentDocument || f.contentWindow.document);
-        
-        const iframeMouseOver = () => {
-          f.style.boxShadow = "";
-          f.contentDocument.documentElement.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
-        };
-        
-        const iframeMouseOut = () => {
-          f.contentDocument.documentElement.style.boxShadow = "";
-        };
-        
-        f.contentDocument.documentElement.addEventListener("mouseover", iframeMouseOver);
-        f.contentDocument.documentElement.addEventListener("mouseout", iframeMouseOut);
-        
-        // Store handlers for cleanup
-        iframeHandlers.push({
-          iframe: f,
-          mouseover: iframeMouseOver,
-          mouseout: iframeMouseOut,
-          documentElement: f.contentDocument.documentElement
-        });
-      } catch (e) {
-        console.warn("Cross-origin iframe skipped");
-      }
-    });
-
-    // Cleanup iframe handlers when cleanup message is received
-    const cleanupHandler = (e) => {
-      if (e.data === "__selector_cleanup__") {
-        iframeHandlers.forEach(handler => {
-          try {
-            handler.iframe.style.boxShadow = "";
-            handler.documentElement.style.boxShadow = "";
-            handler.documentElement.removeEventListener("mouseover", handler.mouseover);
-            handler.documentElement.removeEventListener("mouseout", handler.mouseout);
-          } catch (err) {
-            // Ignore errors (e.g., iframe removed or cross-origin)
-          }
-        });
-      }
-    };
-    
-    window.addEventListener("message", cleanupHandler);
-  }); */
 
   const selectButtonMainOnly2 = modal.querySelector('.button-grid .custom-button.select-main-only-2');
   attachCloseAction(selectButtonMainOnly2);
@@ -1157,25 +908,26 @@
       // Track mouseup and determine if it's a short click
       function handleMouseUp(e) {
         if (mouseDownTime === null) return;
-        
+
         const clickDuration = Date.now() - mouseDownTime;
         const isShortClick = clickDuration < CLICK_DURATION_THRESHOLD;
         const isSameTarget = mouseDownTarget === e.target;
-        
+
         // Reset tracking
         mouseDownTime = null;
         mouseDownTarget = null;
-        
+
         // Only process selector for short clicks on the same target
         if (isShortClick && isSameTarget) {
           e.preventDefault();
           e.stopPropagation();
           let selector = getSelector(e.target);
+          let selectorWithTab = getSelectorWithTab(e.target) !== selector ? getSelectorWithTab(e.target) : null;
           let elementText = getElementText(e.target);
           // Clean up selector mode first
           window.top.postMessage("__selector_cleanup__", "*");
           // Show modal with selector and text
-          showSelectorModal(selector, elementText);
+          showSelectorModal(selector, selectorWithTab, elementText);
         }
         // For long clicks, let the event propagate normally (don't prevent default)
       }
@@ -1188,7 +940,7 @@
         }
         lastHovered = e.target;
         lastHovered.setAttribute("data-selector-shadow", "");
-        
+
         // Ensure we have the original className (should already be captured by mouseenter or MutationObserver)
         if (!lastHovered.hasAttribute("data-original-class")) {
           lastHovered.setAttribute("data-original-class", lastHovered.className || "");
@@ -1220,32 +972,32 @@
         if (text && text.trim()) {
           return text.trim();
         }
-        
+
         // Fallback to title
         if (el.title) {
           return el.title;
         }
-        
+
         // Fallback to aria-label
         if (el.getAttribute('aria-label')) {
           return el.getAttribute('aria-label');
         }
-        
+
         // Fallback to aria-labelledby
         if (el.getAttribute('aria-labelledby')) {
           return el.getAttribute('aria-labelledby');
         }
-        
+
         // Fallback to name attribute
         if (el.name) {
           return el.name;
         }
-        
+
         // Fallback to alt attribute
         if (el.alt) {
           return el.alt;
         }
-        
+
         return '';
       }
 
@@ -1278,13 +1030,45 @@
           }
         }
 
+        return selector;
+      }
+
+      // Generate CSS selector path
+      function getSelectorWithTab(el) {
+        if (!el || el.nodeType !== 1) return "";
+
+        let tag = el.tagName.toLowerCase();
+        // Use original className if available (captured before hover classes), otherwise current className
+        const originalClass = el.getAttribute("data-original-class");
+        const className = originalClass !== null ? originalClass : (el.className || "");
+        let cls = className
+          ? "." + className.trim().split(/\s+/).map(c => CSS.escape(c)).join(".")
+          : "";
+
+        // If element has no class, find first parent with a class and add it to hierarchy
+        let selector = `${tag}${cls}`;
+        if (cls === "") {
+          let parentWithClass = el.parentElement;
+          while (parentWithClass && parentWithClass.nodeType === 1 && parentWithClass.tagName.toLowerCase() !== "html" && parentWithClass.tagName.toLowerCase() !== "body") {
+            const parentOriginalClass = parentWithClass.getAttribute("data-original-class");
+            const parentClassName = parentOriginalClass !== null ? parentOriginalClass : (parentWithClass.className || "");
+            if (parentClassName) {
+              const parentTag = parentWithClass.tagName.toLowerCase();
+              const parentCls = "." + parentClassName.trim().split(/\s+/).map(c => CSS.escape(c)).join(".");
+              selector = `${parentTag}${parentCls} ${selector}`;
+              break;
+            }
+            parentWithClass = parentWithClass.parentElement;
+          }
+        }
+
         // Check if element comes after div with widgetid="OASWSUPAPPSection-stc_tablist"
         const elDoc = el.ownerDocument || doc;
-        
+
         // Check for tablist div in current document first
         let tablistDiv = elDoc.querySelector('div[widgetid="OASWSUPAPPSection-stc_tablist"]');
         let tablistDoc = elDoc;
-        
+
         // If not found, also check main document (whether in iframe or not)
         if (!tablistDiv) {
           try {
@@ -1299,12 +1083,12 @@
             // Cross-origin iframe, ignore
           }
         }
-        
+
         if (tablistDiv) {
           // Check if the selected element is a descendant of or comes after this div
           let currentEl = el;
           let isAfterTablist = false;
-          
+
           // Check if element is descendant of tablist div (only if in same document)
           if (elDoc === tablistDoc) {
             while (currentEl && currentEl !== elDoc.body) {
@@ -1314,7 +1098,7 @@
               }
               currentEl = currentEl.parentElement;
             }
-            
+
             // If not descendant, check if element comes after tablist div in DOM
             if (!isAfterTablist && tablistDiv.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) {
               isAfterTablist = true;
@@ -1324,14 +1108,14 @@
             // Consider element as "after" tablist if tablist exists in main doc
             isAfterTablist = true;
           }
-          
+
           if (isAfterTablist) {
             // Find the .tabLabel element with aria-selected="true" inside the tablist div
             const activeTabLabel = tablistDiv.querySelector('.tabLabel[aria-selected="true"]');
-            
+
             if (activeTabLabel) {
               const elementTitle = activeTabLabel.getAttribute('title') || '';
-              
+
               if (elementTitle) {
                 const tabSelector = `.tabLabel[title="${CSS.escape(elementTitle)}"][aria-selected="true"]`;
                 selector = `${selector} <<< ${tabSelector}`;
@@ -1403,19 +1187,19 @@
     Array.from(document.querySelectorAll("iframe")).forEach(f => {
       try {
         inject(f.contentDocument || f.contentWindow.document);
-        
+
         const iframeMouseOver = () => {
           f.style.boxShadow = "";
           f.contentDocument.documentElement.style.boxShadow = "0 0 0 2px rgba(255,193,7,0.75), inset 0 0 0 9999px rgba(255,193,7,0.15)";
         };
-        
+
         const iframeMouseOut = () => {
           f.contentDocument.documentElement.style.boxShadow = "";
         };
-        
+
         f.contentDocument.documentElement.addEventListener("mouseover", iframeMouseOver);
         f.contentDocument.documentElement.addEventListener("mouseout", iframeMouseOut);
-        
+
         // Store handlers for cleanup
         iframeHandlers.push({
           iframe: f,
@@ -1443,7 +1227,7 @@
         });
       }
     };
-    
+
     window.addEventListener("message", cleanupHandler);
   });
 
@@ -1457,8 +1241,23 @@
   });
 
   // Option buttons example
-  const optionButtons = modal.querySelectorAll('.button-list .custom-button');
-  attachButtonAction(optionButtons[0], () => console.log('Option A clicked'));
-  attachButtonAction(optionButtons[1], () => console.log('Option B clicked'));
-  attachButtonAction(optionButtons[2], () => console.log('Option C clicked'));
+  const resetCompletions = modal.querySelector('.reset-completions');
+  attachButtonAction(resetCompletions, () => {
+    if (localStorage.getItem("USERTOUR@0.0.1/identify-anonymous")) {
+      localStorage.removeItem("USERTOUR@0.0.1/identify-anonymous");
+      usertour.enableUserTour();
+    }
+  });
+
+  const pageNameCopy = modal.querySelector('.page-name-section .copy-button-page-name');
+  const pageNameCopyLabel = modal.querySelector('.page-name-section .copy-button-page-name span');
+  attachButtonAction(pageNameCopy, () => {
+    navigator.clipboard.writeText(document.title).then(() => {
+      pageNameCopyLabel.textContent = 'Copied';
+      setTimeout(() => {
+        pageNameCopyLabel.textContent = 'Copy';
+      }, 2000);
+    });
+  });
+
 })();
