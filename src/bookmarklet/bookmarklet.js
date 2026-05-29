@@ -405,7 +405,7 @@
   }
 
   // Function to show selector modal
-  function showSelectorModal(selector, selectorWithTab, elementText) {
+  function showSelectorModal(selector, selectorWithTab, elementText, elementId, elementIdWithTab) {
     // Remove any existing selector modal
     const existingModal = document.querySelector('.selector-modal-overlay');
     if (existingModal) {
@@ -433,7 +433,7 @@
 
     const selectorLabel = document.createElement('label');
     selectorLabel.className = 'selector-field-label';
-    selectorLabel.textContent = 'CSS selector';
+    selectorLabel.textContent = 'CSS selector (Class)';
 
     const selectorWrapper = document.createElement('div');
     selectorWrapper.className = 'selector-field-wrapper';
@@ -511,7 +511,7 @@
 
     const selectorLabel2 = document.createElement('label');
     selectorLabel2.className = 'selector-field-label';
-    selectorLabel2.textContent = 'CSS selector (Specific Tab)';
+    selectorLabel2.textContent = 'CSS selector | Specific Tab (Class)';
 
     const selectorWrapper2 = document.createElement('div');
     selectorWrapper2.className = 'selector-field-wrapper';
@@ -544,6 +544,84 @@
     selectorContainer2.appendChild(selectorLabel2);
     selectorContainer2.appendChild(selectorWrapper2);
 
+    // Create element ID field container
+    const idContainer = document.createElement('div');
+    idContainer.className = 'selector-field-container';
+
+    const idLabel = document.createElement('label');
+    idLabel.className = 'selector-field-label';
+    idLabel.textContent = 'CSS Selector (ID)';
+
+    const idWrapper = document.createElement('div');
+    idWrapper.className = 'selector-field-wrapper';
+
+    const idInput = document.createElement('input');
+    idInput.type = 'text';
+    idInput.className = 'selector-field';
+    idInput.value = elementId || '';
+    idInput.readOnly = true;
+
+    const idCopyBtn = document.createElement('button');
+    idCopyBtn.className = 'copy-button';
+    const idIcon = document.createElement('i');
+    idIcon.className = 'fa fa-clone';
+    const idCopyText = document.createElement('span');
+    idCopyText.textContent = 'Copy';
+    idCopyBtn.appendChild(idIcon);
+    idCopyBtn.appendChild(idCopyText);
+    idCopyBtn.onclick = () => {
+      navigator.clipboard.writeText(elementId || '').then(() => {
+        idCopyText.textContent = 'Copied';
+        setTimeout(() => {
+          idCopyText.textContent = 'Copy';
+        }, 2000);
+      });
+    };
+
+    idWrapper.appendChild(idInput);
+    idWrapper.appendChild(idCopyBtn);
+    idContainer.appendChild(idLabel);
+    idContainer.appendChild(idWrapper);
+
+    // Create element ID (Specific Tab) field container
+    const idTabContainer = document.createElement('div');
+    idTabContainer.className = 'selector-field-container';
+
+    const idTabLabel = document.createElement('label');
+    idTabLabel.className = 'selector-field-label';
+    idTabLabel.textContent = 'CSS Selector | Specific Tab (ID)';
+
+    const idTabWrapper = document.createElement('div');
+    idTabWrapper.className = 'selector-field-wrapper';
+
+    const idTabInput = document.createElement('input');
+    idTabInput.type = 'text';
+    idTabInput.className = 'selector-field';
+    idTabInput.value = elementIdWithTab || '';
+    idTabInput.readOnly = true;
+
+    const idTabCopyBtn = document.createElement('button');
+    idTabCopyBtn.className = 'copy-button';
+    const idTabIcon = document.createElement('i');
+    idTabIcon.className = 'fa fa-clone';
+    const idTabCopyText = document.createElement('span');
+    idTabCopyText.textContent = 'Copy';
+    idTabCopyBtn.appendChild(idTabIcon);
+    idTabCopyBtn.appendChild(idTabCopyText);
+    idTabCopyBtn.onclick = () => {
+      navigator.clipboard.writeText(elementIdWithTab || '').then(() => {
+        idTabCopyText.textContent = 'Copied';
+        setTimeout(() => {
+          idTabCopyText.textContent = 'Copy';
+        }, 2000);
+      });
+    };
+
+    idTabWrapper.appendChild(idTabInput);
+    idTabWrapper.appendChild(idTabCopyBtn);
+    idTabContainer.appendChild(idTabLabel);
+    idTabContainer.appendChild(idTabWrapper);
+
     // Build modal
     const modalTitle = document.createElement('h2');
     modalTitle.textContent = 'Selector Details';
@@ -554,6 +632,10 @@
     selectorModal.appendChild(selectorContainer);
     if (selectorWithTab) {
       selectorModal.appendChild(selectorContainer2);
+    }
+    selectorModal.appendChild(idContainer);
+    if (elementIdWithTab) {
+      selectorModal.appendChild(idTabContainer);
     }
     selectorOverlay.appendChild(selectorModal);
     document.body.appendChild(selectorOverlay);
@@ -638,11 +720,12 @@
           e.stopPropagation();
           let selector = getSelector(e.target);
           let elementText = getElementText(e.target);
+          let elementId = e.target.id || '';
           let selectorWithTab = null;
           // Clean up selector mode first
           window.top.postMessage("__selector_cleanup__", "*");
           // Show modal with selector and text
-          showSelectorModal(selector, selectorWithTab, elementText);
+          showSelectorModal(selector, selectorWithTab, elementText, elementId, null);
         } else if (!isShortClick && isSameTarget) {
           // For long clicks, reset data-original-class so it can be recaptured on hoverIn
           e.target.removeAttribute("data-original-class");
@@ -924,10 +1007,16 @@
           let selector = getSelector(e.target);
           let selectorWithTab = getSelectorWithTab(e.target) !== selector ? getSelectorWithTab(e.target) : null;
           let elementText = getElementText(e.target);
+          let elementId = e.target.id || '';
+          let elementIdWithTab = null;
+          if (elementId && selectorWithTab && selectorWithTab.includes('<<<')) {
+            const tabPart = selectorWithTab.split('<<<')[1].trim();
+            elementIdWithTab = `#${CSS.escape(elementId)} <<< ${tabPart}`;
+          }
           // Clean up selector mode first
           window.top.postMessage("__selector_cleanup__", "*");
           // Show modal with selector and text
-          showSelectorModal(selector, selectorWithTab, elementText);
+          showSelectorModal(selector, selectorWithTab, elementText, elementId, elementIdWithTab);
         }
         // For long clicks, let the event propagate normally (don't prevent default)
       }
