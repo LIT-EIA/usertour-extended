@@ -50,4 +50,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Send completion notification
-        run: curl -s "https://purge.jsdelivr.net/gh/lit-eia/usertour-extended/dist/bookmarklet.min.js
+        run: curl -s "https://purge.jsdelivr.net/gh/lit-eia/usertour-extended/dist/bookmarklet.min.js"
