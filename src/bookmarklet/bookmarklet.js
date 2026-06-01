@@ -1,7 +1,7 @@
 (function () {
 
   // Only open once
-  if (document.querySelector('.custom-modal-overlay')) {
+  if (document.querySelector('#usertour-bookmarklet-host')) {
     return;
   }
 
@@ -24,21 +24,41 @@
     localStorage.setItem("ut-configurator", JSON.stringify(storage));
   }
 
-  // Load Font Awesome
+  // Load fonts in document.head for global @font-face availability
   const faLink = document.createElement('link');
   faLink.rel = 'stylesheet';
   faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
   document.head.appendChild(faLink);
 
-  // Load Roboto font
   const robotoLink = document.createElement('link');
   robotoLink.rel = 'stylesheet';
   robotoLink.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap';
   document.head.appendChild(robotoLink);
 
-  // Inject styles
+  // Create shadow host for full CSS isolation from host page
+  const shadowHost = document.createElement('div');
+  shadowHost.id = 'usertour-bookmarklet-host';
+  const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
+
+  // Also inject fonts inside shadow DOM so .fa class rules apply within the shadow boundary
+  const faLinkShadow = document.createElement('link');
+  faLinkShadow.rel = 'stylesheet';
+  faLinkShadow.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+  shadowRoot.appendChild(faLinkShadow);
+
+  const robotoLinkShadow = document.createElement('link');
+  robotoLinkShadow.rel = 'stylesheet';
+  robotoLinkShadow.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap';
+  shadowRoot.appendChild(robotoLinkShadow);
+
+  // Inject styles into shadow DOM — fully isolated from host page styles
   const style = document.createElement('style');
   style.textContent = `
+    :host {
+      all: initial;
+      display: block;
+    }
+
     .custom-modal-overlay {
       position: fixed;
       top: 0; left: 0;
@@ -51,12 +71,11 @@
 
     .custom-modal {
       position: relative;
-      background: #f9f9f9;
+      background: #ffffff;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.15);
       width: 320px;
       max-width: 90%;
-      padding: 20px;
       font-family: 'Roboto', sans-serif !important;
       font-size: 14px !important;
       color: #000 !important;
@@ -82,7 +101,6 @@
 
     .custom-modal h2 {
       margin-top: 0;
-      font-size: 18.2px !important;
       margin-bottom: 14px;
       color: #000 !important;
       font-family: 'Roboto', sans-serif !important;
@@ -157,11 +175,13 @@
       justify-content: center;
       font-family: 'Roboto', sans-serif !important;
       color: #000 !important;
+      background-color: #5533FF;
     }
 
     .button-grid .custom-button i {
       font-size: 16.8px !important;
       margin-bottom: 4px;
+      color: #fff !important;
     }
 
     .toggle-container {
@@ -216,7 +236,7 @@
     }
 
     input:checked + .slider {
-      background-color: #4a90e2;
+      background-color: #5533FF!important;
     }
 
     input:checked + .slider:before {
@@ -242,7 +262,7 @@
     }
 
     .custom-button:hover {
-      background: #d5d5d5;
+      background: #775CFF;
     }
 
     @keyframes fadeIn {
@@ -254,13 +274,10 @@
       to { transform: translateY(0); opacity: 1; }
     }
 
-    .selector-field-container {
-      margin-bottom: 16px;
-    }
-
     .selector-field-label {
       font-size: 11.9px !important;
       color: #000 !important;
+      margin-top: 6px;
       margin-bottom: 6px;
       display: block;
       font-family: 'Roboto', sans-serif !important;
@@ -294,7 +311,7 @@
       padding: 6px 10px;
       border: none;
       border-radius: 6px;
-      background: #e0e0e0;
+      background: #5533FF;
       color: #000 !important;
       font-size: 11.9px !important;
       cursor: pointer;
@@ -309,88 +326,112 @@
     }
 
     .copy-button:hover {
-      background: #d5d5d5;
+      background: #775CFF;
     }
 
     .copy-button i {
       font-size: 14px !important;
     }
 
+    .copy-button i:before {
+      color: #fff !important;
+    }
+
     .copy-button span {
       font-size: 11.9px !important;
-      color: #000 !important;
+      color: #fff !important;
       font-family: 'Roboto', sans-serif !important;
     }
 
     .custom-button span {
       font-size: inherit !important;
-      color: #000 !important;
+      color: #fff !important;
       font-family: 'Roboto', sans-serif !important;
     }
 
     .custom-hidden {
       display: none!important;
     }
+
+    .modal-title {
+      margin-bottom: 0!important;
+    }
+
+    .modal-header {
+      background: #F1F5F9;
+      height: 20px;
+      border-radius: 10px 10px 0 0;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #E3E9F1;
+    }
+      
+    .modal-content {
+      padding: 0 20px 20px 20px;
+    }
+
+    .usertour-logo {
+      margin-right: 10px;
+    }
   `;
-  document.head.appendChild(style);
+  shadowRoot.appendChild(style);
 
   // Create modal
   const overlay = document.createElement('div');
   overlay.className = 'custom-modal-overlay';
-
-  const modal = document.createElement('div');
-  modal.className = 'custom-modal';
-
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'close-button';
-  closeBtn.innerHTML = '&times;';
-  closeBtn.setAttribute('aria-label', 'Close modal');
-  closeBtn.onclick = () => overlay.remove();
-
-  const pageName = document.title;
-
-  modal.innerHTML = `
-    <h2>Usertour Helper</h2>
-    <p><em>Unique platforms</em></p>
-    <div class="button-grid">
-      <button class="custom-button select" aria-label="Select an element">
-        <i class="fa fa-mouse-pointer"></i>
-        <span>Select</span>
-      </button>
-    </div>
-    <p><em>Non-unique platforms</em></p>
-    <div class="button-grid">
-        <button class="custom-button select-main-only-2" aria-label="Select an element">
-        <i class="fa fa-mouse-pointer"></i>
-        <span>Select</span>
-      </button>
-    </div>
-
-    <div class="toggle-container">
-      <span class="toggle-label">Test Mode</span>
-      <label class="switch">
-        <input type="checkbox" id="testModeToggle">
-        <span class="slider"></span>
-      </label>
-    </div>
-     <div class="button-grid">
-      <button class="custom-button reset-completions">
-        <i class="fa fa-undo"></i>
-        <span>Reset Completions</span>
-      </button>
-    </div>
-    <div class="page-name-section selector-field-container">
-    <label class="selector-field-label">Page Name</label>
-      <div class="selector-field-wrapper">
-        <input type="text" class="selector-field selector-field-page-name" readonly="" value="${pageName}">
-        <button class="copy-button copy-button-page-name"><i class="fa fa-clone"></i><span>Copy</span></button>
+  overlay.innerHTML = `
+    <div class="custom-modal">
+      <div class="modal-header">
+        <svg class="usertour-logo" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1" width="20" height="20" viewBox="0 0 30 30" wm-editor-extension-available="true"><defs><clipPath id="master_svg0_7_48"><rect x="0" y="0" width="30" height="30" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_7_48)"><g><path d="M0,6.8759790625C0,6.8759790625,8.35842,28.1924390625,8.35842,28.1924390625C8.35842,28.1924390625,9.28417,4.7900390625,9.28417,4.7900390625C9.28417,4.7900390625,0,6.8759790625,0,6.8759790625C0,6.8759790625,0,6.8759790625,0,6.8759790625Z" fill="#5533FF" fill-opacity="1"/></g><g><path d="M11.4051551171875,4.38867C11.4051551171875,4.38867,8.6512451171875,28.2246,8.6512451171875,28.2246C8.6512451171875,28.2246,29.9998451171875,0,29.9998451171875,0C29.9998451171875,0,11.4051551171875,4.38867,11.4051551171875,4.38867C11.4051551171875,4.38867,11.4051551171875,4.38867,11.4051551171875,4.38867Z" fill="#5533FF" fill-opacity="1"/></g></g></g></svg><h2 class="modal-title">Usertour Helper</h2>
+        <button class="close-button" aria-label="Close modal">&times;</button>
       </div>
+      <div class="modal-content">
+      <h3>Selectors</h3>
+      <div class="button-grid">
+        <button class="custom-button select-main-only-2" aria-label="Select an element">
+          <i class="fa fa-mouse-pointer"></i>
+          <span>Non-unique</span>
+        </button>
+        <button class="custom-button select" aria-label="Select an element">
+          <i class="fa fa-mouse-pointer"></i>
+          <span>Unique</span>
+        </button>
+      </div>
+      <div class="button-grid">
+       
+      </div>
+      <h3>Options</h3>
+
+      <div class="button-grid">
+        <button class="custom-button reset-completions">
+          <i class="fa fa-undo"></i>
+          <span>Reset Completions</span>
+        </button>
+      </div>
+           <div class="toggle-container">
+        <span class="toggle-label">Test Mode</span>
+        <label class="switch">
+          <input type="checkbox" id="testModeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="page-name-section selector-field-container">
+        <label class="selector-field-label">Page Name</label>
+        <div class="selector-field-wrapper">
+          <input type="text" class="selector-field selector-field-page-name" readonly>
+          <button class="copy-button copy-button-page-name"><i class="fa fa-clone"></i><span>Copy</span></button>
+        </div>
+      </div>
+     </div>
     </div>
   `;
 
-  modal.prepend(closeBtn);
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
+  const modal = overlay.querySelector('.custom-modal');
+  overlay.querySelector('.close-button').onclick = () => shadowHost.remove();
+  modal.querySelector('.selector-field-page-name').value = document.title;
+  shadowRoot.appendChild(overlay);
+  document.body.appendChild(shadowHost);
 
   // Utility functions
   function attachCloseAction(button) {
@@ -406,239 +447,83 @@
 
   // Function to show selector modal
   function showSelectorModal(selector, selectorWithTab, elementText, elementId, elementIdWithTab) {
-    // Remove any existing selector modal
-    const existingModal = document.querySelector('.selector-modal-overlay');
-    if (existingModal) {
-      existingModal.remove();
-    }
+    const existingModal = shadowRoot.querySelector('.selector-modal-overlay');
+    if (existingModal) existingModal.remove();
 
-    // Create modal overlay
     const selectorOverlay = document.createElement('div');
     selectorOverlay.className = 'custom-modal-overlay selector-modal-overlay';
 
-    // Create modal
-    const selectorModal = document.createElement('div');
-    selectorModal.className = 'custom-modal';
+    selectorOverlay.innerHTML = `
+      <div class="custom-modal">
+        <div class="modal-header">
+          <svg class="usertour-logo" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1" width="20" height="20" viewBox="0 0 30 30" wm-editor-extension-available="true"><defs><clipPath id="master_svg0_7_48"><rect x="0" y="0" width="30" height="30" rx="0"/></clipPath></defs><g><g clip-path="url(#master_svg0_7_48)"><g><path d="M0,6.8759790625C0,6.8759790625,8.35842,28.1924390625,8.35842,28.1924390625C8.35842,28.1924390625,9.28417,4.7900390625,9.28417,4.7900390625C9.28417,4.7900390625,0,6.8759790625,0,6.8759790625C0,6.8759790625,0,6.8759790625,0,6.8759790625Z" fill="#5533FF" fill-opacity="1"/></g><g><path d="M11.4051551171875,4.38867C11.4051551171875,4.38867,8.6512451171875,28.2246,8.6512451171875,28.2246C8.6512451171875,28.2246,29.9998451171875,0,29.9998451171875,0C29.9998451171875,0,11.4051551171875,4.38867,11.4051551171875,4.38867C11.4051551171875,4.38867,11.4051551171875,4.38867,11.4051551171875,4.38867Z" fill="#5533FF" fill-opacity="1"/></g></g></g></svg><h2 class="modal-title">Usertour Helper</h2>
+          <button class="close-button" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-content">
+          <h3>Selector Details</h3>
+          <div class="selector-field-container">
+            <label class="selector-field-label">Element text</label>
+            <div class="selector-field-wrapper">
+              <input type="text" class="selector-field" readonly>
+              <button class="copy-button"><i class="fa fa-clone"></i><span>Copy</span></button>
+            </div>
+          </div>
+          <div class="selector-field-container">
+            <label class="selector-field-label">CSS selector (Class)</label>
+            <div class="selector-field-wrapper">
+              <input type="text" class="selector-field" readonly>
+              <button class="copy-button"><i class="fa fa-clone"></i><span>Copy</span></button>
+            </div>
+          </div>
+          <div class="selector-field-container${selectorWithTab ? '' : ' custom-hidden'}">
+            <label class="selector-field-label">CSS selector | Specific Tab (Class)</label>
+            <div class="selector-field-wrapper">
+              <input type="text" class="selector-field" readonly>
+              <button class="copy-button"><i class="fa fa-clone"></i><span>Copy</span></button>
+            </div>
+          </div>
+          <div class="selector-field-container${elementId ? '' : ' custom-hidden'}">
+            <label class="selector-field-label">CSS Selector (ID)</label>
+            <div class="selector-field-wrapper">
+              <input type="text" class="selector-field" readonly>
+              <button class="copy-button"><i class="fa fa-clone"></i><span>Copy</span></button>
+            </div>
+          </div>
+          <div class="selector-field-container${elementIdWithTab ? '' : ' custom-hidden'}">
+            <label class="selector-field-label">CSS Selector | Specific Tab (ID)</label>
+            <div class="selector-field-wrapper">
+              <input type="text" class="selector-field" readonly>
+              <button class="copy-button"><i class="fa fa-clone"></i><span>Copy</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
 
-    // Close button
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'close-button';
-    closeBtn.innerHTML = '&times;';
-    closeBtn.setAttribute('aria-label', 'Close modal');
-    closeBtn.onclick = () => selectorOverlay.remove();
+    const selectorModal = selectorOverlay.querySelector('.custom-modal');
+    selectorModal.querySelector('.close-button').onclick = () => shadowHost.remove();
 
-    // Create selector field container
-    const selectorContainer = document.createElement('div');
-    selectorContainer.className = 'selector-field-container';
+    const fieldData = [
+      elementText || '',
+      selector,
+      selectorWithTab || '',
+      elementId ? `#${elementId}` : '',
+      elementIdWithTab || '',
+    ];
 
-    const selectorLabel = document.createElement('label');
-    selectorLabel.className = 'selector-field-label';
-    selectorLabel.textContent = 'CSS selector (Class)';
+    selectorModal.querySelectorAll('.selector-field-container').forEach((container, i) => {
+      const value = fieldData[i];
+      container.querySelector('.selector-field').value = value;
+      const copySpan = container.querySelector('.copy-button span');
+      container.querySelector('.copy-button').onclick = () => {
+        navigator.clipboard.writeText(value).then(() => {
+          copySpan.textContent = 'Copied';
+          setTimeout(() => { copySpan.textContent = 'Copy'; }, 2000);
+        });
+      };
+    });
 
-    const selectorWrapper = document.createElement('div');
-    selectorWrapper.className = 'selector-field-wrapper';
-
-    const selectorInput = document.createElement('input');
-    selectorInput.type = 'text';
-    selectorInput.className = 'selector-field';
-    selectorInput.value = selector;
-    selectorInput.readOnly = true;
-
-    const selectorCopyBtn = document.createElement('button');
-    selectorCopyBtn.className = 'copy-button';
-    const selectorIcon = document.createElement('i');
-    selectorIcon.className = 'fa fa-clone';
-    const selectorText = document.createElement('span');
-    selectorText.textContent = 'Copy';
-    selectorCopyBtn.appendChild(selectorIcon);
-    selectorCopyBtn.appendChild(selectorText);
-    selectorCopyBtn.onclick = () => {
-      navigator.clipboard.writeText(selector).then(() => {
-        selectorText.textContent = 'Copied';
-        setTimeout(() => {
-          selectorText.textContent = 'Copy';
-        }, 2000);
-      });
-    };
-
-    selectorWrapper.appendChild(selectorInput);
-    selectorWrapper.appendChild(selectorCopyBtn);
-    selectorContainer.appendChild(selectorLabel);
-    selectorContainer.appendChild(selectorWrapper);
-
-    // Create text field container
-    const textContainer = document.createElement('div');
-    textContainer.className = 'selector-field-container';
-
-    const textLabel = document.createElement('label');
-    textLabel.className = 'selector-field-label';
-    textLabel.textContent = 'Element text';
-
-    const textWrapper = document.createElement('div');
-    textWrapper.className = 'selector-field-wrapper';
-
-    const textInput = document.createElement('input');
-    textInput.type = 'text';
-    textInput.className = 'selector-field';
-    textInput.value = elementText || '';
-    textInput.readOnly = true;
-
-    const textCopyBtn = document.createElement('button');
-    textCopyBtn.className = 'copy-button';
-    const textIcon = document.createElement('i');
-    textIcon.className = 'fa fa-clone';
-    const textCopyText = document.createElement('span');
-    textCopyText.textContent = 'Copy';
-    textCopyBtn.appendChild(textIcon);
-    textCopyBtn.appendChild(textCopyText);
-    textCopyBtn.onclick = () => {
-      navigator.clipboard.writeText(elementText || '').then(() => {
-        textCopyText.textContent = 'Copied';
-        setTimeout(() => {
-          textCopyText.textContent = 'Copy';
-        }, 2000);
-      });
-    };
-
-    textWrapper.appendChild(textInput);
-    textWrapper.appendChild(textCopyBtn);
-    textContainer.appendChild(textLabel);
-    textContainer.appendChild(textWrapper);
-
-    // Create selector field container
-    const selectorContainer2 = document.createElement('div');
-    selectorContainer2.className = 'selector-field-container';
-
-    const selectorLabel2 = document.createElement('label');
-    selectorLabel2.className = 'selector-field-label';
-    selectorLabel2.textContent = 'CSS selector | Specific Tab (Class)';
-
-    const selectorWrapper2 = document.createElement('div');
-    selectorWrapper2.className = 'selector-field-wrapper';
-
-    const selectorInput2 = document.createElement('input');
-    selectorInput2.type = 'text';
-    selectorInput2.className = 'selector-field';
-    selectorInput2.value = selectorWithTab;
-    selectorInput2.readOnly = true;
-
-    const selectorCopyBtn2 = document.createElement('button');
-    selectorCopyBtn2.className = 'copy-button';
-    const selectorIcon2 = document.createElement('i');
-    selectorIcon2.className = 'fa fa-clone';
-    const selectorText2 = document.createElement('span');
-    selectorText2.textContent = 'Copy';
-    selectorCopyBtn2.appendChild(selectorIcon2);
-    selectorCopyBtn2.appendChild(selectorText2);
-    selectorCopyBtn2.onclick = () => {
-      navigator.clipboard.writeText(selectorWithTab).then(() => {
-        selectorText2.textContent = 'Copied';
-        setTimeout(() => {
-          selectorText2.textContent = 'Copy';
-        }, 2000);
-      });
-    };
-
-    selectorWrapper2.appendChild(selectorInput2);
-    selectorWrapper2.appendChild(selectorCopyBtn2);
-    selectorContainer2.appendChild(selectorLabel2);
-    selectorContainer2.appendChild(selectorWrapper2);
-
-    // Create element ID field container
-    const idContainer = document.createElement('div');
-    idContainer.className = 'selector-field-container';
-
-    const idLabel = document.createElement('label');
-    idLabel.className = 'selector-field-label';
-    idLabel.textContent = 'CSS Selector (ID)';
-
-    const idWrapper = document.createElement('div');
-    idWrapper.className = 'selector-field-wrapper';
-
-    const idInput = document.createElement('input');
-    idInput.type = 'text';
-    idInput.className = 'selector-field';
-    idInput.value = elementId || '';
-    idInput.readOnly = true;
-
-    const idCopyBtn = document.createElement('button');
-    idCopyBtn.className = 'copy-button';
-    const idIcon = document.createElement('i');
-    idIcon.className = 'fa fa-clone';
-    const idCopyText = document.createElement('span');
-    idCopyText.textContent = 'Copy';
-    idCopyBtn.appendChild(idIcon);
-    idCopyBtn.appendChild(idCopyText);
-    idCopyBtn.onclick = () => {
-      navigator.clipboard.writeText(elementId || '').then(() => {
-        idCopyText.textContent = 'Copied';
-        setTimeout(() => {
-          idCopyText.textContent = 'Copy';
-        }, 2000);
-      });
-    };
-
-    idWrapper.appendChild(idInput);
-    idWrapper.appendChild(idCopyBtn);
-    idContainer.appendChild(idLabel);
-    idContainer.appendChild(idWrapper);
-
-    // Create element ID (Specific Tab) field container
-    const idTabContainer = document.createElement('div');
-    idTabContainer.className = 'selector-field-container';
-
-    const idTabLabel = document.createElement('label');
-    idTabLabel.className = 'selector-field-label';
-    idTabLabel.textContent = 'CSS Selector | Specific Tab (ID)';
-
-    const idTabWrapper = document.createElement('div');
-    idTabWrapper.className = 'selector-field-wrapper';
-
-    const idTabInput = document.createElement('input');
-    idTabInput.type = 'text';
-    idTabInput.className = 'selector-field';
-    idTabInput.value = elementIdWithTab || '';
-    idTabInput.readOnly = true;
-
-    const idTabCopyBtn = document.createElement('button');
-    idTabCopyBtn.className = 'copy-button';
-    const idTabIcon = document.createElement('i');
-    idTabIcon.className = 'fa fa-clone';
-    const idTabCopyText = document.createElement('span');
-    idTabCopyText.textContent = 'Copy';
-    idTabCopyBtn.appendChild(idTabIcon);
-    idTabCopyBtn.appendChild(idTabCopyText);
-    idTabCopyBtn.onclick = () => {
-      navigator.clipboard.writeText(elementIdWithTab || '').then(() => {
-        idTabCopyText.textContent = 'Copied';
-        setTimeout(() => {
-          idTabCopyText.textContent = 'Copy';
-        }, 2000);
-      });
-    };
-
-    idTabWrapper.appendChild(idTabInput);
-    idTabWrapper.appendChild(idTabCopyBtn);
-    idTabContainer.appendChild(idTabLabel);
-    idTabContainer.appendChild(idTabWrapper);
-
-    // Build modal
-    const modalTitle = document.createElement('h2');
-    modalTitle.textContent = 'Selector Details';
-
-    selectorModal.appendChild(closeBtn);
-    selectorModal.appendChild(modalTitle);
-    selectorModal.appendChild(textContainer);
-    selectorModal.appendChild(selectorContainer);
-    if (selectorWithTab) {
-      selectorModal.appendChild(selectorContainer2);
-    }
-    selectorModal.appendChild(idContainer);
-    if (elementIdWithTab) {
-      selectorModal.appendChild(idTabContainer);
-    }
-    selectorOverlay.appendChild(selectorModal);
-    document.body.appendChild(selectorOverlay);
+    shadowRoot.appendChild(selectorOverlay);
   }
 
   // Select button: close + custom action
@@ -686,6 +571,7 @@
       let lastHovered = null;
       let mouseDownTime = null;
       let mouseDownTarget = null;
+      let preventNextClick = false;
       const CLICK_DURATION_THRESHOLD = 300; // milliseconds
 
       // Capture className on mouseenter (fires before mouseover and before hover states)
@@ -718,6 +604,7 @@
         if (isShortClick && isSameTarget) {
           e.preventDefault();
           e.stopPropagation();
+          preventNextClick = true;
           let selector = getSelector(e.target);
           let elementText = getElementText(e.target);
           let elementId = e.target.id || '';
@@ -731,6 +618,15 @@
           e.target.removeAttribute("data-original-class");
         }
         // For long clicks, let the event propagate normally (don't prevent default)
+      }
+
+      // Block the click event that follows a short mouseup (prevents link navigation etc.)
+      function handleClick(e) {
+        if (preventNextClick) {
+          preventNextClick = false;
+          e.preventDefault();
+          e.stopPropagation();
+        }
       }
 
       // Highlight hovered element
@@ -834,6 +730,7 @@
           doc.removeEventListener("mouseenter", captureOriginalClass, true);
           doc.removeEventListener("mousedown", handleMouseDown, true);
           doc.removeEventListener("mouseup", handleMouseUp, true);
+          doc.removeEventListener("click", handleClick, true);
           doc.removeEventListener("mouseover", hoverIn);
           doc.removeEventListener("mouseout", hoverOut);
           if (doc._selectorObserver) {
@@ -869,6 +766,7 @@
       doc.addEventListener("mouseout", hoverOut);
       doc.addEventListener("mousedown", handleMouseDown, true);
       doc.addEventListener("mouseup", handleMouseUp, true);
+      doc.addEventListener("click", handleClick, true);
       window.addEventListener("message", e => {
         if (e.data === "__selector_cleanup__") destroy(doc);
       });
@@ -972,6 +870,7 @@
       let lastHovered = null;
       let mouseDownTime = null;
       let mouseDownTarget = null;
+      let preventNextClick = false;
       const CLICK_DURATION_THRESHOLD = 300; // milliseconds
 
       // Capture className on mouseenter (fires before mouseover and before hover states)
@@ -1004,6 +903,7 @@
         if (isShortClick && isSameTarget) {
           e.preventDefault();
           e.stopPropagation();
+          preventNextClick = true;
           let selector = getSelector(e.target);
           let selectorWithTab = getSelectorWithTab(e.target) !== selector ? getSelectorWithTab(e.target) : null;
           let elementText = getElementText(e.target);
@@ -1011,7 +911,7 @@
           let elementIdWithTab = null;
           if (elementId && selectorWithTab && selectorWithTab.includes('<<<')) {
             const tabPart = selectorWithTab.split('<<<')[1].trim();
-            elementIdWithTab = `#${CSS.escape(elementId)} <<< ${tabPart}`;
+            elementIdWithTab = `#${elementId} <<< ${tabPart}`;
           }
           // Clean up selector mode first
           window.top.postMessage("__selector_cleanup__", "*");
@@ -1019,6 +919,15 @@
           showSelectorModal(selector, selectorWithTab, elementText, elementId, elementIdWithTab);
         }
         // For long clicks, let the event propagate normally (don't prevent default)
+      }
+
+      // Block the click event that follows a short mouseup (prevents link navigation etc.)
+      function handleClick(e) {
+        if (preventNextClick) {
+          preventNextClick = false;
+          e.preventDefault();
+          e.stopPropagation();
+        }
       }
 
       // Highlight hovered element
@@ -1226,6 +1135,7 @@
           doc.removeEventListener("mouseenter", captureOriginalClass, true);
           doc.removeEventListener("mousedown", handleMouseDown, true);
           doc.removeEventListener("mouseup", handleMouseUp, true);
+          doc.removeEventListener("click", handleClick, true);
           doc.removeEventListener("mouseover", hoverIn);
           doc.removeEventListener("mouseout", hoverOut);
           if (doc._selectorObserver) {
@@ -1261,6 +1171,7 @@
       doc.addEventListener("mouseout", hoverOut);
       doc.addEventListener("mousedown", handleMouseDown, true);
       doc.addEventListener("mouseup", handleMouseUp, true);
+      doc.addEventListener("click", handleClick, true);
       window.addEventListener("message", e => {
         if (e.data === "__selector_cleanup__") destroy(doc);
       });
