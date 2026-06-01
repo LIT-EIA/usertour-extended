@@ -70,6 +70,7 @@
     }
 
     .custom-modal {
+    
       position: relative;
       background: #ffffff;
       border-radius: 12px;
