@@ -102,13 +102,13 @@
 
     .custom-modal h2 {
       margin-top: 0;
-      margin-bottom: 14px;
       color: #000 !important;
       font-family: 'Roboto', sans-serif !important;
+      font-size: 18px !important;
     }
 
     .custom-modal h3 {
-      font-size: 16.8px !important;
+      font-size: 15px !important;
       color: #000 !important;
       font-family: 'Roboto', sans-serif !important;
     }
